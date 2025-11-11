@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Editor, Extension } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -174,45 +174,6 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
   const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
   const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
 
-  const defaultEditorWidthRef = useRef<number | null>(null)
-
-  const applyResponsiveWidth = useCallback((proseMirrorRoot: HTMLElement | null) => {
-    if (!proseMirrorRoot) return
-
-    if (defaultEditorWidthRef.current === null) {
-      const measured = proseMirrorRoot.getBoundingClientRect().width
-      if (Number.isFinite(measured) && measured > 0) {
-        defaultEditorWidthRef.current = measured
-      }
-    }
-
-    const baseWidth = defaultEditorWidthRef.current ?? proseMirrorRoot.getBoundingClientRect().width
-    if (!baseWidth || !Number.isFinite(baseWidth)) {
-      return
-    }
-
-    const tables = Array.from(proseMirrorRoot.querySelectorAll<HTMLTableElement>('table'))
-    const maxTableWidth = tables.reduce((acc, table) => {
-      const rectWidth = table.getBoundingClientRect().width
-      const scrollWidth = table.scrollWidth
-      return Math.max(acc, rectWidth, scrollWidth)
-    }, 0)
-
-    const targetWidth = maxTableWidth > baseWidth ? maxTableWidth : baseWidth
-    const shouldExpand = targetWidth > baseWidth + 1
-
-    if (shouldExpand) {
-      const widthPx = `${targetWidth}px`
-      proseMirrorRoot.style.width = widthPx
-      proseMirrorRoot.style.minWidth = widthPx
-      proseMirrorRoot.style.maxWidth = widthPx
-    } else {
-      proseMirrorRoot.style.width = ''
-      proseMirrorRoot.style.minWidth = ''
-      proseMirrorRoot.style.maxWidth = ''
-    }
-  }, [])
-
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -247,13 +208,9 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
     ],
     content: value,
     autofocus: false,
-    onCreate: ({ editor: instance }) => {
-      applyResponsiveWidth(instance.view.dom as HTMLElement)
-    },
     onUpdate: ({ editor: instance }) => {
       const html = instance.getHTML()
       onChange(html)
-      applyResponsiveWidth(instance.view.dom as HTMLElement)
     },
     onSelectionUpdate: ({ editor: instance }) => {
       const currentFamily = String(instance.getAttributes('textStyle').fontFamily ?? '').trim()
@@ -303,21 +260,6 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
     const initialSize = normalizeFontSizeValue(String(editor.getAttributes('textStyle').fontSize ?? ''))
     setFontSize(initialSize)
   }, [editor])
-
-  useEffect(() => {
-    if (!editor) return
-    const root = editor.view.dom as HTMLElement
-
-    const handleResize = () => {
-      applyResponsiveWidth(root)
-    }
-
-    handleResize()
-    window.addEventListener('resize', handleResize)
-    return () => {
-      window.removeEventListener('resize', handleResize)
-    }
-  }, [editor, applyResponsiveWidth])
 
   useEffect(() => {
     if (!isTablePickerOpen) return
