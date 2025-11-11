@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/richtexteditor.tsx","./src/lib/applyrichstyles.ts","./src/lib/markdowntohtml.ts","./src/lib/odtjsontohtml.ts","./src/lib/stylemap.ts","./src/lib/extensions/fontsize.ts","./src/lib/odt/odtbuilder.ts","./src/lib/odt/odttemplates.ts","./src/lib/odt/types.ts","./src/lib/odt/zipodt.ts"],"version":"5.9.3"}

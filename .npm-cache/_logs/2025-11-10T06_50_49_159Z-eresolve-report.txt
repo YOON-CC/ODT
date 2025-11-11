@@ -1,0 +1,18 @@
+'Log files:
+/Users/chan/Desktop/odt로직/.npm-cache/_logs/2025-11-10T06_50_49_159Z-debug-0.log
+
+# npm resolution error report
+
+While resolving: vite-react-typescript-starter@0.0.0
+Found: react@19.2.0
+node_modules/react
+  react@"^19.2.0" from the root project
+
+Could not resolve dependency:
+peer react@"^16 || ^17 || ^18" from react-quill@2.0.0
+node_modules/react-quill
+  react-quill@"*" from the root project
+
+Fix the upstream dependency conflict, or retry
+this command with --force or --legacy-peer-deps
+to accept an incorrect (and potentially broken) dependency resolution.

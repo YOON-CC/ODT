@@ -1,0 +1,31 @@
+:root {
+  --bg: #0b0c10;
+  --panel: #121317;
+  --text: #e6e7eb;
+  --muted: #9aa2b1;
+  --primary: #7aa2ff;
+  --accent: #65c3a8;
+}
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Noto Sans, Ubuntu; }
+.app {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto 1fr auto;
+  gap: 12px;
+  height: 100%;
+  padding: 16px;
+}
+.header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.panel { background: var(--panel); border: 1px solid #1c1e25; border-radius: 12px; padding: 12px; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.toolbar { display: flex; gap: 8px; align-items: center; }
+.toolbar button { background: var(--primary); color: #0b0c10; border: 0; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.toolbar .secondary { background: #2a2f3a; color: var(--text); }
+.preview { overflow: auto; height: calc(100% - 8px); background: #0e1015; border-radius: 8px; padding: 16px; border: 1px solid #1f2430; }
+.label { color: var(--muted); font-size: 12px; display:block; margin-bottom: 8px; }
+.input { background: #0f1117; border: 1px solid #222735; border-radius: 8px; padding: 8px 10px; color: var(--text); }
+hr.sep { border: none; height: 1px; background: #1a1f2b; margin: 8px 0; }
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; }
+}
