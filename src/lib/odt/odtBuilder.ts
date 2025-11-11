@@ -167,7 +167,8 @@ class StyleRegistry {
       relWidthAttr = `${widthStr}%`
       key = `rel:${relWidthAttr}`
     } else {
-      return undefined
+      widthAttr = '17cm'
+      key = 'abs:17cm'
     }
 
     const cached = key ? this.tableStyles.get(key) : undefined
@@ -222,7 +223,7 @@ class StyleRegistry {
 
     const baseStyles = `
     <style:style style:name="P" style:family="paragraph">
-      <style:paragraph-properties fo:margin-top="0.2cm" fo:margin-bottom="0.2cm" fo:line-height="140%"/>
+      <style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.42cm" fo:line-height="160%"/>
       <style:text-properties style:font-name="BodyFont" fo:font-size="12pt"/>
     </style:style>
 
@@ -243,7 +244,7 @@ class StyleRegistry {
     </style:style>
 
     <style:style style:name="TableCell" style:family="table-cell">
-      <style:table-cell-properties fo:border="0.5pt solid #444444" fo:padding="0.05cm"/>
+      <style:table-cell-properties fo:border="0.75pt solid #c5ccd6" fo:padding="0.20cm"/>
     </style:style>`
     
     const tableStyles = Array.from(this.tableStyles.values())
@@ -301,7 +302,7 @@ class StyleRegistry {
       .map(({ name, backgroundColor }) => {
         return `
     <style:style style:name="${name}" style:family="table-cell">
-      <style:table-cell-properties fo:border="0.5pt solid #444444" fo:padding="0.05cm" fo:background-color="${backgroundColor}"/>
+      <style:table-cell-properties fo:border="0.75pt solid #c5ccd6" fo:padding="0.20cm" fo:background-color="${backgroundColor}"/>
     </style:style>`
       })
       .join('')

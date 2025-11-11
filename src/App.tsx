@@ -13,6 +13,13 @@ type ParagraphStyleProps = Pick<
   'lineHeight' | 'marginTop' | 'marginBottom' | 'marginLeft' | 'marginRight' | 'textIndent'
 >
 
+type ConversionContext = {
+  contentWidthPx: number
+  pageWidthCm: number
+  tableRatios: Array<number | undefined>
+  tableCursor: number
+}
+
 const PARAGRAPH_TAGS = new Set(['P', 'DIV', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE'])
 
 const BLOCK_TAG_SPAN_STYLES: Record<string, SpanStyle> = {
@@ -31,6 +38,8 @@ const INLINE_TAG_STYLES: Record<string, SpanStyle> = {
 }
 
 const SAMPLE_RESPONSE = sampleResponse as OdtJsonDocument
+const PAGE_CONTENT_WIDTH_CM = 17
+const DEFAULT_CONTENT_WIDTH_PX = (PAGE_CONTENT_WIDTH_CM / 2.54) * 96
 
 export default function App() {
   const [html, setHtml] = useState('')
@@ -45,7 +54,20 @@ export default function App() {
   }, [])
 
   async function handleDownload() {
-    const json = convertHtmlToOdtDoc(html)
+    const editorRoot = document.querySelector('.rte__content .ProseMirror') as HTMLElement | null
+    let contentWidthPx = DEFAULT_CONTENT_WIDTH_PX
+
+    if (editorRoot) {
+      const styles = window.getComputedStyle(editorRoot)
+      const paddingLeft = parseFloat(styles.paddingLeft) || 0
+      const paddingRight = parseFloat(styles.paddingRight) || 0
+      const measured = editorRoot.clientWidth - paddingLeft - paddingRight
+      if (Number.isFinite(measured) && measured > 0) {
+        contentWidthPx = measured
+      }
+    }
+
+    const json = convertHtmlToOdtDoc(html, { editorRoot, contentWidthPx })
     await makeAndDownloadOdt(json, '알림장.odt')
   }
 
@@ -73,12 +95,36 @@ export default function App() {
   )
 }
 
-function convertHtmlToOdtDoc(htmlString: string): OdtDoc {
+function convertHtmlToOdtDoc(
+  htmlString: string,
+  options: { editorRoot?: HTMLElement | null; contentWidthPx?: number } = {}
+): OdtDoc {
+  const editorRoot = options.editorRoot ?? null
+  const contentWidthPx = options.contentWidthPx ?? DEFAULT_CONTENT_WIDTH_PX
+  const pageWidthCm = PAGE_CONTENT_WIDTH_CM
+
+  const tableRatios =
+    editorRoot && contentWidthPx > 0
+      ? Array.from(editorRoot.querySelectorAll('table')).map(table => {
+          const widthPx = table.getBoundingClientRect().width
+          return widthPx && Number.isFinite(widthPx) && widthPx > 0
+            ? widthPx / contentWidthPx
+            : undefined
+        })
+      : []
+
   const doc = new DOMParser().parseFromString(htmlString, 'text/html')
   const body = doc.body
 
+  const context: ConversionContext = {
+    contentWidthPx,
+    pageWidthCm,
+    tableRatios,
+    tableCursor: 0
+  }
+
   // ✅ 기존 body.childNodes → 재귀 탐색
-  const blocks = collectBlocks(body)
+  const blocks = collectBlocks(body, context)
 
   return {
     meta: { title: '알림장', creator: 'ODT Demo' },
@@ -86,9 +132,7 @@ function convertHtmlToOdtDoc(htmlString: string): OdtDoc {
     body: blocks
   }
 }
-
-
-function collectBlocks(root: HTMLElement): OdtBlock[] {
+function collectBlocks(root: HTMLElement, context: ConversionContext): OdtBlock[] {
   const blocks: OdtBlock[] = []
 
   Array.from(root.children).forEach((el) => {
@@ -97,7 +141,7 @@ function collectBlocks(root: HTMLElement): OdtBlock[] {
 
     // ✅ 1) TABLE
     if (tag === 'TABLE') {
-      blocks.push({ type: 'table', value: tableElementToTable(el as HTMLTableElement) })
+      blocks.push({ type: 'table', value: tableElementToTable(el as HTMLTableElement, context) })
       return
     }
 
@@ -123,7 +167,7 @@ function collectBlocks(root: HTMLElement): OdtBlock[] {
     }
 
     // ✅ 4) 그 외 컨테이너 내부 재귀 탐색
-    blocks.push(...collectBlocks(el))
+    blocks.push(...collectBlocks(el, context))
   })
 
   return blocks
@@ -131,9 +175,12 @@ function collectBlocks(root: HTMLElement): OdtBlock[] {
 
 
 
-function tableElementToTable(tableEl: HTMLTableElement): Table {
-  const widthPct = extractTableWidthPercent(tableEl)
-  const widthCm = extractTableWidthCm(tableEl)
+function tableElementToTable(tableEl: HTMLTableElement, context: ConversionContext): Table {
+  const widthPctAttr = extractTableWidthPercent(tableEl)
+  const widthCmAttr = extractTableWidthCm(tableEl)
+  const layoutWidth = computeTableWidthFromLayout(tableEl, context)
+  const widthPct = widthPctAttr ?? layoutWidth?.widthPct
+  const widthCm = widthCmAttr ?? layoutWidth?.widthCm
   const columnWidths = extractTableColumnWidths(tableEl)
 
   const rows = Array.from(tableEl.rows).map(row => ({
@@ -191,6 +238,29 @@ function extractTableWidthCm(tableEl: HTMLTableElement): string | undefined {
   }
 
   return undefined
+}
+
+function computeTableWidthFromLayout(
+  tableEl: HTMLTableElement,
+  context: ConversionContext
+): { widthPct: number; widthCm: string } | undefined {
+  const ratio = getNextTableRatio(context)
+  if (ratio === undefined) return undefined
+  const clamped = Math.min(Math.max(ratio, 0.01), 1)
+  const widthCmValue = context.pageWidthCm * clamped
+  return {
+    widthPct: Number((clamped * 100).toFixed(2)),
+    widthCm: `${widthCmValue.toFixed(4)}cm`
+  }
+}
+
+function getNextTableRatio(context: ConversionContext): number | undefined {
+  const index = context.tableCursor
+  context.tableCursor += 1
+  const ratio = context.tableRatios[index]
+  if (ratio === undefined) return undefined
+  if (!Number.isFinite(ratio) || ratio <= 0) return undefined
+  return ratio
 }
 
 function extractTableColumnWidths(tableEl: HTMLTableElement): Array<string | undefined> | undefined {
