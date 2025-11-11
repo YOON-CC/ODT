@@ -17,6 +17,7 @@ type ConversionContext = {
   contentWidthPx: number
   pageWidthCm: number
   tableRatios: Array<number | undefined>
+  tableColumnRatios: Array<Array<number | undefined>>
   tableCursor: number
 }
 
@@ -40,6 +41,11 @@ const INLINE_TAG_STYLES: Record<string, SpanStyle> = {
 const SAMPLE_RESPONSE = sampleResponse as OdtJsonDocument
 const PAGE_CONTENT_WIDTH_CM = 17
 const DEFAULT_CONTENT_WIDTH_PX = (PAGE_CONTENT_WIDTH_CM / 2.54) * 96
+
+type TableMeasurement = {
+  tableRatio?: number
+  columnRatios: Array<number | undefined>
+}
 
 export default function App() {
   const [html, setHtml] = useState('')
@@ -103,15 +109,15 @@ function convertHtmlToOdtDoc(
   const contentWidthPx = options.contentWidthPx ?? DEFAULT_CONTENT_WIDTH_PX
   const pageWidthCm = PAGE_CONTENT_WIDTH_CM
 
-  const tableRatios =
+  const tableMeasurements =
     editorRoot && contentWidthPx > 0
-      ? Array.from(editorRoot.querySelectorAll('table')).map(table => {
-          const widthPx = table.getBoundingClientRect().width
-          return widthPx && Number.isFinite(widthPx) && widthPx > 0
-            ? widthPx / contentWidthPx
-            : undefined
-        })
+      ? Array.from(editorRoot.querySelectorAll('table')).map(table =>
+          measureTableLayout(table, contentWidthPx)
+        )
       : []
+
+  const tableRatios = tableMeasurements.map(measure => measure?.tableRatio)
+  const tableColumnRatios = tableMeasurements.map(measure => measure?.columnRatios ?? [])
 
   const doc = new DOMParser().parseFromString(htmlString, 'text/html')
   const body = doc.body
@@ -120,6 +126,7 @@ function convertHtmlToOdtDoc(
     contentWidthPx,
     pageWidthCm,
     tableRatios,
+    tableColumnRatios,
     tableCursor: 0
   }
 
@@ -132,6 +139,57 @@ function convertHtmlToOdtDoc(
     body: blocks
   }
 }
+
+function measureTableLayout(table: HTMLTableElement, contentWidthPx: number): TableMeasurement {
+  const rect = table.getBoundingClientRect()
+  const tableRatio =
+    rect.width && Number.isFinite(rect.width) && rect.width > 0
+      ? rect.width / contentWidthPx
+      : undefined
+
+  const rows = Array.from(table.rows)
+  let maxColumns = 0
+  rows.forEach(row => {
+    let count = 0
+    Array.from(row.cells).forEach(cell => {
+      const span = Math.max(cell.colSpan || 1, 1)
+      count += span
+    })
+    if (count > maxColumns) {
+      maxColumns = count
+    }
+  })
+
+  const columnWidths: Array<number | undefined> = new Array(maxColumns).fill(undefined)
+
+  rows.forEach(row => {
+    let columnIndex = 0
+    Array.from(row.cells).forEach(cell => {
+      const span = Math.max(cell.colSpan || 1, 1)
+      const cellRect = cell.getBoundingClientRect()
+      const baseWidth =
+        cellRect.width && Number.isFinite(cellRect.width) && cellRect.width > 0
+          ? cellRect.width / span
+          : undefined
+      for (let offset = 0; offset < span && columnIndex + offset < maxColumns; offset += 1) {
+        if (baseWidth !== undefined) {
+          const current = columnWidths[columnIndex + offset]
+          if (current === undefined || baseWidth > current) {
+            columnWidths[columnIndex + offset] = baseWidth
+          }
+        }
+      }
+      columnIndex += span
+    })
+  })
+
+  const columnRatios = columnWidths.map(width =>
+    width && Number.isFinite(width) && width > 0 ? width / contentWidthPx : undefined
+  )
+
+  return { tableRatio, columnRatios }
+}
+
 function collectBlocks(root: HTMLElement, context: ConversionContext): OdtBlock[] {
   const blocks: OdtBlock[] = []
 
@@ -181,7 +239,9 @@ function tableElementToTable(tableEl: HTMLTableElement, context: ConversionConte
   const layoutWidth = computeTableWidthFromLayout(tableEl, context)
   const widthPct = widthPctAttr ?? layoutWidth?.widthPct
   const widthCm = widthCmAttr ?? layoutWidth?.widthCm
-  const columnWidths = extractTableColumnWidths(tableEl)
+  const columnWidthsAttr = extractTableColumnWidths(tableEl)
+  const layoutColumnWidths = computeColumnWidthsFromLayout(context)
+  const columnWidths = mergeColumnWidths(columnWidthsAttr, layoutColumnWidths)
 
   const rows = Array.from(tableEl.rows).map(row => ({
     cells: Array.from(row.cells).map(cell => {
@@ -261,6 +321,31 @@ function getNextTableRatio(context: ConversionContext): number | undefined {
   if (ratio === undefined) return undefined
   if (!Number.isFinite(ratio) || ratio <= 0) return undefined
   return ratio
+}
+
+function computeColumnWidthsFromLayout(context: ConversionContext): Array<string | undefined> {
+  const index = context.tableCursor - 1
+  if (index < 0) return []
+  const columnRatios = context.tableColumnRatios[index] ?? []
+  if (!columnRatios.length) return []
+  return columnRatios.map(ratio => {
+    if (ratio === undefined || !Number.isFinite(ratio) || ratio <= 0) return undefined
+    const widthCmValue = context.pageWidthCm * Math.min(Math.max(ratio, 0.001), 1)
+    return `${widthCmValue.toFixed(4)}cm`
+  })
+}
+
+function mergeColumnWidths(
+  original: Array<string | undefined> | undefined,
+  fallback: Array<string | undefined>
+): Array<string | undefined> | undefined {
+  const maxLength = Math.max(original?.length ?? 0, fallback.length)
+  if (!maxLength) return original ?? fallback ?? undefined
+  const merged: Array<string | undefined> = []
+  for (let i = 0; i < maxLength; i += 1) {
+    merged[i] = original?.[i] ?? fallback[i]
+  }
+  return merged
 }
 
 function extractTableColumnWidths(tableEl: HTMLTableElement): Array<string | undefined> | undefined {
