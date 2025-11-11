@@ -18,7 +18,14 @@ body { margin: 0; background: var(--bg); color: var(--text); font-family: ui-san
   padding: 16px;
 }
 .header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-.panel { background: var(--panel); border: 1px solid #1c1e25; border-radius: 12px; padding: 12px; box-shadow: 0 6px 16px rgba(0,0,0,.25); }
+.panel {
+  background: var(--panel);
+  border: 1px solid #1c1e25;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  grid-column: 1 / -1;
+}
 .toolbar { display: flex; gap: 8px; align-items: center; }
 .toolbar button { background: var(--primary); color: #0b0c10; border: 0; padding: 8px 12px; border-radius: 10px; font-weight: 700; cursor: pointer; }
 .toolbar .secondary { background: #2a2f3a; color: var(--text); }

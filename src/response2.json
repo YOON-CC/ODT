@@ -1,0 +1,74 @@
+{
+  "type": "doc",
+  "body": [
+    {
+      "type": "paragraph",
+      "value": {
+        "align": "center",
+        "spans": [
+          { "text": "📢 2025학년도 가정통신문", "bold": true, "fontSize": "16pt" }
+        ]
+      }
+    },
+    {
+      "type": "paragraph",
+      "value": {
+        "align": "center",
+        "spans": [
+          { "text": "화상 영어 수업 신청 안내", "bold": true, "fontSize": "14pt" }
+        ]
+      }
+    },
+    {
+      "type": "paragraph",
+      "value": {
+        "spans": [
+          { "text": "안녕하십니까 학부모님.\n본교에서는 학생들의 영어 의사소통 능력 향상을 위해 ", "fontSize": "12pt" },
+          { "text": "2025학년도 화상 영어 수업", "bold": true, "color": "#0070ff" },
+          { "text": "을 운영하고자 합니다." }
+        ]
+      }
+    },
+    {
+      "type": "table",
+      "value": {
+        "widthPct": 100,
+        "columnWidths": ["4cm", "12cm"],
+        "rows": [
+          {
+            "cells": [
+              {
+                "paragraphs": [{ "align": "center", "spans": [{ "text": "구분", "bold": true }] }],
+                "backgroundColor": "#eef2f7"
+              },
+              {
+                "paragraphs": [{ "align": "center", "spans": [{ "text": "내용", "bold": true }] }],
+                "backgroundColor": "#eef2f7"
+              }
+            ]
+          },
+          {
+            "cells": [
+              { "paragraphs": [{ "spans": [{ "text": "운영 기간" }] }] },
+              { "paragraphs": [{ "spans": [{ "text": "2025년 3월 ~ 2025년 11월 (총 8개월)" }] }] }
+            ]
+          },
+          {
+            "cells": [
+              { "paragraphs": [{ "spans": [{ "text": "신청 기간" }] }] },
+              { "paragraphs": [{ "spans": [{ "text": "2025년 3월 7일(금)까지" }] }] }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "paragraph",
+      "value": {
+        "spans": [
+          { "text": "* 문의: 교무실 (02-123-4567)", "italic": true, "color": "#555" }
+        ]
+      }
+    }
+  ]
+}

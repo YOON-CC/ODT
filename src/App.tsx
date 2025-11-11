@@ -59,7 +59,7 @@ export default function App() {
     setHtml(converted)
   }, [])
 
-  async function handleDownload() {
+  const handleDownload = useCallback(async () => {
     const editorRoot = document.querySelector('.rte__content .ProseMirror') as HTMLElement | null
     let contentWidthPx = DEFAULT_CONTENT_WIDTH_PX
 
@@ -75,26 +75,13 @@ export default function App() {
 
     const json = convertHtmlToOdtDoc(html, { editorRoot, contentWidthPx })
     await makeAndDownloadOdt(json, '알림장.odt')
-  }
-
-  const handleLoadSample = useCallback(() => {
-    setHtml(sampleHtmlRef.current)
-  }, [])
+  }, [html])
 
   return (
     <div className="app">
-      <div className="header">
-        <h1 style={{ margin: 0 }}>Markdown → ODT 다운로드</h1>
-        <div className="toolbar">
-          <button onClick={handleDownload}>.odt 다운로드</button>
-          <button className="secondary" onClick={handleLoadSample}>샘플 불러오기</button>
-        </div>
-      </div>
-
       <div className="panel">
-        <label className="label">Rich Text Editor</label>
         <div style={{ height: '100%', flex: 1 }}>
-          <RichTextEditor value={html} onChange={setHtml} />
+          <RichTextEditor value={html} onChange={setHtml} onDownload={handleDownload} />
         </div>
       </div>
     </div>

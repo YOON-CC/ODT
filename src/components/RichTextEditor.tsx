@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Editor, Extension } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -17,6 +17,7 @@ import './RichTextEditor.css'
 type Props = {
   value: string
   onChange: (html: string) => void
+  onDownload?: () => void
 }
 
 const FONT_FAMILIES = {
@@ -160,7 +161,7 @@ declare module '@tiptap/core' {
   }
 }
 
-export default function RichTextEditor({ value, onChange }: Props) {
+export default function RichTextEditor({ value, onChange, onDownload }: Props) {
   const [fontKey, setFontKey] = useState<FontKey>('system')
   const [fontColor, setFontColor] = useState<string>(DEFAULT_COLOR)
   const [fontSize, setFontSize] = useState<FontSizeValue>(FONT_SIZE_DEFAULT)
@@ -172,6 +173,45 @@ export default function RichTextEditor({ value, onChange }: Props) {
   )
   const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
   const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
+
+  const defaultEditorWidthRef = useRef<number | null>(null)
+
+  const applyResponsiveWidth = useCallback((proseMirrorRoot: HTMLElement | null) => {
+    if (!proseMirrorRoot) return
+
+    if (defaultEditorWidthRef.current === null) {
+      const measured = proseMirrorRoot.getBoundingClientRect().width
+      if (Number.isFinite(measured) && measured > 0) {
+        defaultEditorWidthRef.current = measured
+      }
+    }
+
+    const baseWidth = defaultEditorWidthRef.current ?? proseMirrorRoot.getBoundingClientRect().width
+    if (!baseWidth || !Number.isFinite(baseWidth)) {
+      return
+    }
+
+    const tables = Array.from(proseMirrorRoot.querySelectorAll<HTMLTableElement>('table'))
+    const maxTableWidth = tables.reduce((acc, table) => {
+      const rectWidth = table.getBoundingClientRect().width
+      const scrollWidth = table.scrollWidth
+      return Math.max(acc, rectWidth, scrollWidth)
+    }, 0)
+
+    const targetWidth = maxTableWidth > baseWidth ? maxTableWidth : baseWidth
+    const shouldExpand = targetWidth > baseWidth + 1
+
+    if (shouldExpand) {
+      const widthPx = `${targetWidth}px`
+      proseMirrorRoot.style.width = widthPx
+      proseMirrorRoot.style.minWidth = widthPx
+      proseMirrorRoot.style.maxWidth = widthPx
+    } else {
+      proseMirrorRoot.style.width = ''
+      proseMirrorRoot.style.minWidth = ''
+      proseMirrorRoot.style.maxWidth = ''
+    }
+  }, [])
 
   const editor = useEditor({
     extensions: [
@@ -207,9 +247,13 @@ export default function RichTextEditor({ value, onChange }: Props) {
     ],
     content: value,
     autofocus: false,
+    onCreate: ({ editor: instance }) => {
+      applyResponsiveWidth(instance.view.dom as HTMLElement)
+    },
     onUpdate: ({ editor: instance }) => {
       const html = instance.getHTML()
       onChange(html)
+      applyResponsiveWidth(instance.view.dom as HTMLElement)
     },
     onSelectionUpdate: ({ editor: instance }) => {
       const currentFamily = String(instance.getAttributes('textStyle').fontFamily ?? '').trim()
@@ -259,6 +303,21 @@ export default function RichTextEditor({ value, onChange }: Props) {
     const initialSize = normalizeFontSizeValue(String(editor.getAttributes('textStyle').fontSize ?? ''))
     setFontSize(initialSize)
   }, [editor])
+
+  useEffect(() => {
+    if (!editor) return
+    const root = editor.view.dom as HTMLElement
+
+    const handleResize = () => {
+      applyResponsiveWidth(root)
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+    return () => {
+      window.removeEventListener('resize', handleResize)
+    }
+  }, [editor, applyResponsiveWidth])
 
   useEffect(() => {
     if (!isTablePickerOpen) return
@@ -641,6 +700,11 @@ export default function RichTextEditor({ value, onChange }: Props) {
         </div>
 
         <div className="rte__toolbar-group rte__toolbar-group--table">
+          {onDownload ? (
+            <button type="button" className="rte__download-button" onClick={onDownload}>
+              .odt 다운로드
+            </button>
+          ) : null}
           <button
             type="button"
             className="rte__chip-button"
