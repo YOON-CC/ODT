@@ -206,10 +206,11 @@
 }
 
 .rte__content .ProseMirror table {
-  width: 100%;
+  width: auto;
+  max-width: 100%;
   border-collapse: collapse;
   margin: 12px 0;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .rte__content .ProseMirror th,
