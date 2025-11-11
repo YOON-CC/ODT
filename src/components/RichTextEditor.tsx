@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Editor, Extension } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
@@ -43,6 +43,9 @@ const DEFAULT_COLOR = '#1f2328' as const
 const DEFAULT_CELL_BACKGROUND = '#ffffff' as const
 const FONT_SIZE_DEFAULT = 'default' as const
 const DEFAULT_FONT_SIZE_LABEL = '기본 (14px)' as const
+const TABLE_PICKER_MAX_ROWS = 8
+const TABLE_PICKER_MAX_COLS = 8
+const TABLE_PICKER_DEFAULT_SIZE = { rows: 2, cols: 2 } as const
 
 const FONT_SIZE_OPTIONS = [
   { value: FONT_SIZE_DEFAULT, label: DEFAULT_FONT_SIZE_LABEL },
@@ -163,6 +166,12 @@ export default function RichTextEditor({ value, onChange }: Props) {
   const [fontSize, setFontSize] = useState<FontSizeValue>(FONT_SIZE_DEFAULT)
   const [cellBackground, setCellBackground] = useState<string>('')
   const [isTableSelection, setIsTableSelection] = useState<boolean>(false)
+  const [isTablePickerOpen, setIsTablePickerOpen] = useState<boolean>(false)
+  const [tablePickerHover, setTablePickerHover] = useState<{ rows: number; cols: number }>(
+    TABLE_PICKER_DEFAULT_SIZE
+  )
+  const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
+  const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
 
   const editor = useEditor({
     extensions: [
@@ -251,6 +260,35 @@ export default function RichTextEditor({ value, onChange }: Props) {
     setFontSize(initialSize)
   }, [editor])
 
+  useEffect(() => {
+    if (!isTablePickerOpen) return
+
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node | null
+      if (
+        !target ||
+        tablePickerAnchorRef.current?.contains(target) ||
+        tablePickerPopoverRef.current?.contains(target)
+      ) {
+        return
+      }
+      setIsTablePickerOpen(false)
+    }
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsTablePickerOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handleClickOutside)
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [isTablePickerOpen])
+
   if (!editor) return null
 
   const exec = (action: (instance: Editor) => void) => () => {
@@ -259,6 +297,8 @@ export default function RichTextEditor({ value, onChange }: Props) {
   }
 
   const isActive = (name: string, attrs?: Record<string, unknown>) => editor?.isActive(name, attrs) ?? false
+
+  const getButtonClass = (active: boolean) => (active ? 'rte__icon-button active' : 'rte__icon-button')
 
   const handleFontChange = (event: ChangeEvent<HTMLSelectElement>) => {
     if (!editor) return
@@ -324,24 +364,26 @@ export default function RichTextEditor({ value, onChange }: Props) {
   return (
     <div className="rte">
       <div className="rte__toolbar">
-        <label htmlFor="rte-font-family" className="rte__font-label">
-          폰트
-        </label>
-        <select
-          id="rte-font-family"
-          className="rte__font-select"
-          value={fontKey}
-          onChange={handleFontChange}
-        >
-          {FONT_OPTIONS.map(option => (
-            <option key={option.key} value={option.key}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+        <div className="rte__toolbar-group rte__toolbar-group--primary">
+          <label htmlFor="rte-font-family" className="rte__group-label">
+            텍스트 스타일
+          </label>
+          <select
+            id="rte-font-family"
+            className="rte__select rte__select--wide"
+            value={fontKey}
+            onChange={handleFontChange}
+          >
+            {FONT_OPTIONS.map(option => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
-        <div className="rte__control-group">
-          <label htmlFor="rte-font-color" className="rte__font-label">
+        <div className="rte__toolbar-group">
+          <label htmlFor="rte-font-color" className="rte__group-label">
             글자색
           </label>
           <input
@@ -352,18 +394,18 @@ export default function RichTextEditor({ value, onChange }: Props) {
             onChange={handleColorChange}
             title="글자색 선택"
           />
-          <button type="button" className="rte__color-reset" onClick={handleColorReset}>
-            초기화
+          <button type="button" className="rte__chip-button" onClick={handleColorReset}>
+            기본
           </button>
         </div>
 
-        <div className="rte__control-group">
-          <label htmlFor="rte-font-size" className="rte__font-label">
+        <div className="rte__toolbar-group">
+          <label htmlFor="rte-font-size" className="rte__group-label">
             글자 크기
           </label>
           <select
             id="rte-font-size"
-            className="rte__size-select"
+            className="rte__select"
             value={fontSize}
             onChange={handleFontSizeChange}
           >
@@ -373,13 +415,13 @@ export default function RichTextEditor({ value, onChange }: Props) {
               </option>
             ))}
           </select>
-          <button type="button" className="rte__size-reset" onClick={handleFontSizeReset}>
-            초기화
+          <button type="button" className="rte__chip-button" onClick={handleFontSizeReset}>
+            기본
           </button>
         </div>
 
-        <div className="rte__control-group">
-          <label htmlFor="rte-cell-background" className="rte__font-label">
+        <div className="rte__toolbar-group">
+          <label htmlFor="rte-cell-background" className="rte__group-label">
             셀 배경
           </label>
           <input
@@ -393,7 +435,7 @@ export default function RichTextEditor({ value, onChange }: Props) {
           />
           <button
             type="button"
-            className="rte__color-reset"
+            className="rte__chip-button"
             disabled={!isTableSelection}
             onClick={handleCellBackgroundReset}
           >
@@ -401,179 +443,275 @@ export default function RichTextEditor({ value, onChange }: Props) {
           </button>
         </div>
 
-        <span className="sep" />
+        <div className="rte__toolbar-separator" />
 
-        <button
-          type="button"
-          className={isActive('heading', { level: 1 }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleHeading({ level: 1 }).run()
-          })}>
-          H1
-        </button>
-        <button
-          type="button"
-          className={isActive('heading', { level: 2 }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleHeading({ level: 2 }).run()
-          })}>
-          H2
-        </button>
-        <button
-          type="button"
-          className={isActive('heading', { level: 3 }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleHeading({ level: 3 }).run()
-          })}>
-          H3
-        </button>
+        <div className="rte__toolbar-group rte__toolbar-group--compact">
+          <button
+            type="button"
+            className={getButtonClass(isActive('heading', { level: 1 }))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleHeading({ level: 1 }).run()
+            })}
+          >
+            H1
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('heading', { level: 2 }))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleHeading({ level: 2 }).run()
+            })}
+          >
+            H2
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('heading', { level: 3 }))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleHeading({ level: 3 }).run()
+            })}
+          >
+            H3
+          </button>
+        </div>
 
-        <span className="sep" />
+        <div className="rte__toolbar-group rte__toolbar-group--compact">
+          <button
+            type="button"
+            className={getButtonClass(isActive('bold'))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleBold().run()
+            })}
+          >
+            B
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('italic'))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleItalic().run()
+            })}
+          >
+            I
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('underline'))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleUnderline().run()
+            })}
+          >
+            U
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className={isActive('bold') ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleBold().run()
-          })}>
-          B
-        </button>
-        <button
-          type="button"
-          className={isActive('italic') ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleItalic().run()
-          })}>
-          I
-        </button>
-        <button
-          type="button"
-          className={isActive('underline') ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleUnderline().run()
-          })}>
-          U
-        </button>
+        <div className="rte__toolbar-group rte__toolbar-group--compact">
+          <button
+            type="button"
+            className={getButtonClass(isActive('bulletList'))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleBulletList().run()
+            })}
+          >
+            •
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('orderedList'))}
+            onClick={exec(instance => {
+              instance.chain().focus().toggleOrderedList().run()
+            })}
+          >
+            1.
+          </button>
+        </div>
 
-        <span className="sep" />
+        <div className="rte__toolbar-group rte__toolbar-group--compact">
+          <button
+            type="button"
+            className={getButtonClass(isActive('textAlign', { textAlign: 'left' }))}
+            onClick={exec(instance => {
+              instance.chain().focus().setTextAlign('left').run()
+            })}
+          >
+            좌
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('textAlign', { textAlign: 'center' }))}
+            onClick={exec(instance => {
+              instance.chain().focus().setTextAlign('center').run()
+            })}
+          >
+            중
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('textAlign', { textAlign: 'right' }))}
+            onClick={exec(instance => {
+              instance.chain().focus().setTextAlign('right').run()
+            })}
+          >
+            우
+          </button>
+          <button
+            type="button"
+            className={getButtonClass(isActive('textAlign', { textAlign: 'justify' }))}
+            onClick={exec(instance => {
+              instance.chain().focus().setTextAlign('justify').run()
+            })}
+          >
+            양
+          </button>
+        </div>
 
-        <button
-          type="button"
-          className={isActive('bulletList') ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleBulletList().run()
-          })}>
-          • List
-        </button>
-        <button
-          type="button"
-          className={isActive('orderedList') ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().toggleOrderedList().run()
-          })}>
-          1. List
-        </button>
+        <div className="rte__table-picker" ref={tablePickerAnchorRef}>
+          <button
+            type="button"
+            className={getButtonClass(isTablePickerOpen)}
+            onMouseDown={event => {
+              event.preventDefault()
+            }}
+            onClick={() => {
+              setIsTablePickerOpen(prev => {
+                const next = !prev
+                if (!prev && editor) {
+                  editor.chain().focus().run()
+                }
+                if (!prev) {
+                  setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
+                }
+                return next
+              })
+            }}
+          >
+            표 추가
+          </button>
 
-        <span className="sep" />
+          {isTablePickerOpen ? (
+            <div className="rte__table-picker-popover" ref={tablePickerPopoverRef}>
+              <div className="rte__table-picker-preview">
+                {Math.max(tablePickerHover.rows, 1)} × {Math.max(tablePickerHover.cols, 1)} 표
+              </div>
+              <div className="rte__table-picker-grid">
+                {Array.from({ length: TABLE_PICKER_MAX_ROWS }).map((_, rowIndex) => (
+                  <div key={`row-${rowIndex}`} className="rte__table-picker-row">
+                    {Array.from({ length: TABLE_PICKER_MAX_COLS }).map((__, colIndex) => {
+                      const rows = rowIndex + 1
+                      const cols = colIndex + 1
+                      const isActiveCell =
+                        rows <= Math.max(tablePickerHover.rows, 0) &&
+                        cols <= Math.max(tablePickerHover.cols, 0)
+                      return (
+                        <button
+                          type="button"
+                          key={`cell-${rowIndex}-${colIndex}`}
+                          className={`rte__table-picker-cell${isActiveCell ? ' selected' : ''}`}
+                          onMouseEnter={() => {
+                            setTablePickerHover({ rows, cols })
+                          }}
+                          onFocus={() => {
+                            setTablePickerHover({ rows, cols })
+                          }}
+                          onMouseDown={event => {
+                            event.preventDefault()
+                          }}
+                          onClick={() => {
+                            const insertRows = Math.max(rows, 1)
+                            const insertCols = Math.max(cols, 1)
+                            editor
+                              ?.chain()
+                              .focus()
+                              .insertTable({
+                                rows: insertRows,
+                                cols: insertCols,
+                                withHeaderRow: false
+                              })
+                              .run()
+                            setIsTablePickerOpen(false)
+                          }}
+                        />
+                      )
+                    })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
 
-        <button
-          type="button"
-          className={isActive('textAlign', { textAlign: 'left' }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().setTextAlign('left').run()
-          })}>
-          L
-        </button>
-        <button
-          type="button"
-          className={isActive('textAlign', { textAlign: 'center' }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().setTextAlign('center').run()
-          })}>
-          C
-        </button>
-        <button
-          type="button"
-          className={isActive('textAlign', { textAlign: 'right' }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().setTextAlign('right').run()
-          })}>
-          R
-        </button>
-        <button
-          type="button"
-          className={isActive('textAlign', { textAlign: 'justify' }) ? 'active' : ''}
-          onClick={exec(instance => {
-            instance.chain().focus().setTextAlign('justify').run()
-          })}>
-          J
-        </button>
-
-        <span className="sep" />
-
-        <button
-          type="button"
-          onClick={exec(instance => {
-            instance.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-          })}>
-          표 추가
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().deleteTable().run()
-          })}>
-          표 삭제
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().addColumnBefore().run()
-          })}>
-          열 추가(좌)
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().addColumnAfter().run()
-          })}>
-          열 추가(우)
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().addRowBefore().run()
-          })}>
-          행 추가(위)
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().addRowAfter().run()
-          })}>
-          행 추가(아래)
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().deleteColumn().run()
-          })}>
-          열 삭제
-        </button>
-        <button
-          type="button"
-          disabled={!isActive('table')}
-          onClick={exec(instance => {
-            instance.chain().focus().deleteRow().run()
-          })}>
-          행 삭제
-        </button>
+        <div className="rte__toolbar-group rte__toolbar-group--table">
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().deleteTable().run()
+            })}
+          >
+            표 삭제
+          </button>
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().addColumnBefore().run()
+            })}
+          >
+            열 + 좌
+          </button>
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().addColumnAfter().run()
+            })}
+          >
+            열 + 우
+          </button>
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().addRowBefore().run()
+            })}
+          >
+            행 + 상
+          </button>
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().addRowAfter().run()
+            })}
+          >
+            행 + 하
+          </button>
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().deleteColumn().run()
+            })}
+          >
+            열 삭제
+          </button>
+          <button
+            type="button"
+            className="rte__chip-button"
+            disabled={!isActive('table')}
+            onClick={exec(instance => {
+              instance.chain().focus().deleteRow().run()
+            })}
+          >
+            행 삭제
+          </button>
+        </div>
       </div>
 
       <EditorContent editor={editor} className="rte__content" />
