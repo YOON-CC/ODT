@@ -1,3 +1,7 @@
+//------------------------------------------------------
+// odtBuilder.ts (FULL VERSION)
+//------------------------------------------------------
+
 import { OdtDoc, OdtBlock, Paragraph, Table, TextSpan } from './types'
 import { escapeXml, odfDocumentContent } from './odtTemplates'
 import { FONT_FAMILY_MAP } from '../styleMap'
@@ -18,12 +22,39 @@ export function buildContentXml(doc: OdtDoc): string {
   return odfDocumentContent(inner, styles.renderAutomaticStyles())
 }
 
+/* -------------------------------------------------------
+ ✅ Block Renderer
+--------------------------------------------------------*/
 function renderBlock(b: OdtBlock, styles: StyleRegistry): string {
   if (b.type === 'paragraph') return renderParagraph(b.value, styles)
   if (b.type === 'table') return renderTable(b.value, styles)
   return ''
 }
 
+/* -------------------------------------------------------
+ ✅ mergeSpanProps: attributes 기반 자동 머지
+--------------------------------------------------------*/
+function mergeSpanProps(span: TextSpan): TextSpan {
+  const a = (span as any).attributes || {};
+
+  return {
+    ...span,
+    bold: span.bold ?? (a["fo:font-weight"] === "bold"),
+    italic: span.italic ?? (a["fo:font-style"] === "italic"),
+    underline:
+      span.underline ??
+      (a["style:text-underline-style"] &&
+        a["style:text-underline-style"] !== "none"),
+
+    fontSize: span.fontSize ?? a["fo:font-size"],
+    color: span.color ?? a["fo:color"],
+    fontFamily: span.fontFamily ?? a["style:font-name"],
+  };
+}
+
+/* -------------------------------------------------------
+ ✅ Paragraph Renderer
+--------------------------------------------------------*/
 function renderParagraph(p: Paragraph, styles: StyleRegistry): string {
   const styleName = styles.getParagraphStyle(p)
   const styleAttr = styleName ? ` text:style-name="${styleName}"` : ''
@@ -35,42 +66,52 @@ function renderParagraph(p: Paragraph, styles: StyleRegistry): string {
   const fragments: string[] = []
 
   p.spans.forEach(span => {
+    // ⭐ attributes + props 통합
+    const merged = mergeSpanProps(span)
 
-    // ✅✅ ✅ fontFamily 처리: T_Gungsuh, T_Serif 등 지정 스타일이 있으면 직접 적용
-    const familyStyle = span.fontFamily ? FONT_FAMILY_MAP[span.fontFamily] : undefined
-    const spanStyleName =
-      familyStyle ?? styles.getSpanStyle(span) // <── fontFamily 우선 적용됨
+    let familyStyle = undefined
+    if (merged.fontFamily) {
+      familyStyle = FONT_FAMILY_MAP[merged.fontFamily]
+    }
 
-    const spanAttr = spanStyleName ? ` text:style-name="${spanStyleName}"` : ''
+    const styleName =
+      familyStyle ?? styles.getSpanStyle(merged)
 
-    // ✅ 그대로 기존 줄바꿈 처리 유지
-    const tokens = span.text.split(/(\n)/)
+    const spanAttr = styleName ? ` text:style-name="${styleName}"` : ''
 
+    const tokens = merged.text.split(/(\n)/)
     tokens.forEach(token => {
       if (token === '\n') {
         fragments.push('<text:line-break/>')
         return
       }
-
-      if (token === '') return
-
-      const escaped = escapeXml(token)
-      fragments.push(`<text:span${spanAttr}>${escaped}</text:span>`)
+      if (!token) return
+      fragments.push(`<text:span${spanAttr}>${escapeXml(token)}</text:span>`)
     })
   })
 
-  const spans = fragments.join('')
-  return `<text:p${styleAttr}>${spans}</text:p>`
+  return `<text:p${styleAttr}>${fragments.join('')}</text:p>`
 }
 
+/* -------------------------------------------------------
+ ✅ Table Renderer
+--------------------------------------------------------*/
 function renderTable(t: Table, styles: StyleRegistry): string {
   const colsCount = t.rows.length ? Math.max(...t.rows.map(r => r.cells.length)) : 0
-  const tableStyle = styles.getTableStyle(t.widthPct, t.columnWidths, t.widthCm)
+
+  const tableStyle = styles.getTableStyle(
+    t.widthPct,
+    t.columnWidths,
+    t.widthCm
+  )
 
   const cols = Array.from({ length: colsCount })
     .map((_, index) => {
       const styleName = styles.getTableColumnStyle(t.columnWidths?.[index])
-      const attr = styleName ? ` table:style-name="${styleName}"` : ' table:style-name="TableColumn"'
+      const attr =
+        styleName
+          ? ` table:style-name="${styleName}"`
+          : ` table:style-name="TableColumn"`
       return `<table:table-column${attr}/>`
     })
     .join('')
@@ -79,16 +120,18 @@ function renderTable(t: Table, styles: StyleRegistry): string {
     .map(r => {
       const cells = r.cells
         .map(c => {
-          const ps = c.paragraphs.map(paragraph => renderParagraph(paragraph, styles)).join('')
+          const ps = c.paragraphs
+            .map(p => renderParagraph(p, styles))
+            .join('')
 
-          const spanAttrs = [
+          const spanAttr = [
             c.colSpan ? ` table:number-columns-spanned="${c.colSpan}"` : '',
             c.rowSpan ? ` table:number-rows-spanned="${c.rowSpan}"` : ''
           ].join('')
 
           const cellStyle = styles.getTableCellStyle(c.backgroundColor) ?? 'TableCell'
 
-          return `<table:table-cell table:style-name="${cellStyle}"${spanAttrs}>${ps || '<text:p/>'}</table:table-cell>`
+          return `<table:table-cell table:style-name="${cellStyle}"${spanAttr}>${ps || '<text:p/>'}</table:table-cell>`
         })
         .join('')
 
@@ -97,131 +140,145 @@ function renderTable(t: Table, styles: StyleRegistry): string {
     .join('')
 
   const tableStyleName = tableStyle ?? 'Table'
+
   return `<table:table table:style-name="${tableStyleName}">${cols}${rows}</table:table>`
 }
 
+/* -------------------------------------------------------
+ ✅ StyleRegistry (FULL)
+--------------------------------------------------------*/
 class StyleRegistry {
   private spanStyles = new Map<string, { name: string; span: TextSpan }>()
   private tableColumnStyles = new Map<string, string>()
   private tableStyles = new Map<
     string,
-    {
-      name: string
-      widthAttr?: string
-      relWidthAttr?: string
-    }
+    { name: string; widthAttr?: string; relWidthAttr?: string }
   >()
-  private paragraphStyles = new Map<string, { name: string; props: ParagraphStyleProps }>()
-  private tableCellStyles = new Map<string, { name: string; backgroundColor: string }>()
+  private paragraphStyles = new Map<
+    string,
+    { name: string; props: ParagraphStyleProps }
+  >()
+  private tableCellStyles = new Map<
+    string,
+    { name: string; backgroundColor: string }
+  >()
 
+  /* ✅ span 스타일 생성 */
   getSpanStyle(span: TextSpan): string | undefined {
-
-    // ✅ fontFamily가 있으면 spanStyle 생성 스킵 (T_Gungsuh 직접 사용)
     if (span.fontFamily) return undefined
 
     const hasFormatting =
-      !!span.bold || !!span.italic || !!span.underline || !!span.color || !!span.fontSize
+      span.bold ||
+      span.italic ||
+      span.underline ||
+      span.color ||
+      span.fontSize
 
     if (!hasFormatting) return undefined
 
     const key = this.keyForSpan(span)
-    const existing = this.spanStyles.get(key)
-    if (existing) return existing.name
+    const exist = this.spanStyles.get(key)
+    if (exist) return exist.name
 
     const name = `T${this.spanStyles.size + 1}`
     this.spanStyles.set(key, { name, span: { ...span } })
     return name
   }
 
-  // ✅ 나머지 table/paragraph style 코드 그대로 유지
+  private keyForSpan(span: TextSpan): string {
+    return [
+      span.fontFamily ? `ff:${span.fontFamily}` : 'ff:',
+      span.bold ? 'b1' : 'b0',
+      span.italic ? 'i1' : 'i0',
+      span.underline ? 'u1' : 'u0',
+      span.color ? `c:${span.color}` : 'c:',
+      span.fontSize ? `f:${span.fontSize}` : 'f:'
+    ].join('|')
+  }
 
-  getTableColumnStyle(width?: string): string | undefined {
-    const normalized = width?.trim()
-    if (!normalized) return undefined
+  /* ✅ Paragraph Style */
+  getParagraphStyle(p: Paragraph): string | undefined {
+    const props: ParagraphStyleProps = {}
 
-    const existing = this.tableColumnStyles.get(normalized)
-    if (existing) return existing
+    if (p.align && p.align !== 'start') props.align = p.align
+    if (p.lineHeight) props.lineHeight = p.lineHeight
+    if (p.marginTop) props.marginTop = p.marginTop
+    if (p.marginBottom) props.marginBottom = p.marginBottom
+    if (p.marginLeft) props.marginLeft = p.marginLeft
+    if (p.marginRight) props.marginRight = p.marginRight
+    if (p.textIndent) props.textIndent = p.textIndent
+
+    const hasProps = Object.values(props).some(v => v)
+    if (!hasProps) return undefined
+
+    const key = JSON.stringify(props)
+    const exist = this.paragraphStyles.get(key)
+    if (exist) return exist.name
+
+    const name = `PStyle${this.paragraphStyles.size + 1}`
+    this.paragraphStyles.set(key, { name, props })
+    return name
+  }
+
+  /* ✅ Table Column Style */
+  getTableColumnStyle(width?: string) {
+    const w = width?.trim()
+    if (!w) return undefined
+
+    const exist = this.tableColumnStyles.get(w)
+    if (exist) return exist
 
     const styleName = `TableColumnCustom${this.tableColumnStyles.size + 1}`
-    this.tableColumnStyles.set(normalized, styleName)
+    this.tableColumnStyles.set(w, styleName)
     return styleName
   }
 
-  getTableStyle(
-    widthPct?: number,
-    columnWidths?: Array<string | undefined>,
-    explicitWidthCm?: string
-  ): string | undefined {
-    const absoluteWidthCm = explicitWidthCm ?? this.computeAbsoluteWidth(columnWidths)
+  /* ✅ Table Style */
+  getTableStyle(widthPct?: number, widths?: (string | undefined)[], explicitWidthCm?: string) {
+    const absolute = explicitWidthCm ?? this.computeAbsoluteWidth(widths)
 
     let key: string | undefined
     let widthAttr: string | undefined
-    let relWidthAttr: string | undefined
+    let rel: string | undefined
 
-    if (absoluteWidthCm) {
-      widthAttr = absoluteWidthCm
-      key = `abs:${widthAttr}`
-    } else if (widthPct && Number.isFinite(widthPct) && widthPct > 0) {
+    if (absolute) {
+      widthAttr = absolute
+      key = `abs:${absolute}`
+    } else if (widthPct) {
       const clamped = Math.max(1, Math.min(widthPct, 1000))
-      const widthStr = Number(clamped.toFixed(2)).toString()
-      relWidthAttr = `${widthStr}%`
-      key = `rel:${relWidthAttr}`
+      rel = `${clamped.toFixed(2)}%`
+      key = `rel:${rel}`
     } else {
       widthAttr = '17cm'
       key = 'abs:17cm'
     }
 
-    const cached = key ? this.tableStyles.get(key) : undefined
-    if (cached) return cached.name
+    const exist = key ? this.tableStyles.get(key) : undefined
+    if (exist) return exist.name
 
-    const styleName = `TableCustom${this.tableStyles.size + 1}`
-    if (key) {
-      this.tableStyles.set(key, { name: styleName, widthAttr, relWidthAttr })
-    }
-    return styleName
+    const name = `TableCustom${this.tableStyles.size + 1}`
+    this.tableStyles.set(key!, { name, widthAttr, relWidthAttr: rel })
+    return name
   }
 
-  getTableCellStyle(backgroundColor?: string): string | undefined {
-    const normalized = backgroundColor?.trim()
-    if (!normalized) return undefined
+  /* ✅ TableCell Style */
+  getTableCellStyle(bg?: string): string | undefined {
+    const b = bg?.trim()
+    if (!b) return undefined
 
-    const key = normalized.toLowerCase()
-    const existing = this.tableCellStyles.get(key)
-    if (existing) return existing.name
+    const exist = this.tableCellStyles.get(b)
+    if (exist) return exist.name
 
-    const styleName = `TableCellCustom${this.tableCellStyles.size + 1}`
-    this.tableCellStyles.set(key, { name: styleName, backgroundColor: normalized })
-    return styleName
+    const name = `TableCellCustom${this.tableCellStyles.size + 1}`
+    this.tableCellStyles.set(b, { name, backgroundColor: b })
+    return name
   }
 
-  getParagraphStyle(paragraph: Paragraph): string | undefined {
-    const props: ParagraphStyleProps = {}
-
-    if (paragraph.align && paragraph.align !== 'start') {
-      props.align = paragraph.align
-    }
-    if (paragraph.lineHeight) props.lineHeight = paragraph.lineHeight
-    if (paragraph.marginTop) props.marginTop = paragraph.marginTop
-    if (paragraph.marginBottom) props.marginBottom = paragraph.marginBottom
-    if (paragraph.marginLeft) props.marginLeft = paragraph.marginLeft
-    if (paragraph.marginRight) props.marginRight = paragraph.marginRight
-    if (paragraph.textIndent) props.textIndent = paragraph.textIndent
-
-    const hasProps = Object.values(props).some(value => value !== undefined && value !== '')
-    if (!hasProps) return undefined
-
-    const key = JSON.stringify(props)
-    const existing = this.paragraphStyles.get(key)
-    if (existing) return existing.name
-
-    const styleName = `PStyle${this.paragraphStyles.size + 1}`
-    this.paragraphStyles.set(key, { name: styleName, props })
-    return styleName
-  }
-
+  /* -------------------------------------------------------
+   ✅ Automatic Styles Renderer (FULL)
+  --------------------------------------------------------*/
   renderAutomaticStyles(): string {
-
-    const baseStyles = `
+    const base = `
     <style:style style:name="P" style:family="paragraph">
       <style:paragraph-properties fo:margin-top="0cm" fo:margin-bottom="0.42cm" fo:line-height="160%"/>
       <style:text-properties style:font-name="BodyFont" fo:font-size="12pt"/>
@@ -232,7 +289,7 @@ class StyleRegistry {
     </style:style>
 
     <style:style style:name="Table" style:family="table">
-      <style:table-properties table:align="left" table:border-model="collapsing" style:may-break-between-rows="false" fo:margin-top="0cm" fo:margin-bottom="0cm" fo:margin-left="0cm" fo:margin-right="0cm"/>
+      <style:table-properties table:align="left" table:border-model="collapsing"/>
     </style:style>
 
     <style:style style:name="TableColumn" style:family="table-column">
@@ -246,117 +303,94 @@ class StyleRegistry {
     <style:style style:name="TableCell" style:family="table-cell">
       <style:table-cell-properties fo:border="0.75pt solid #c5ccd6" fo:padding="0.20cm"/>
     </style:style>`
-    
-    const tableStyles = Array.from(this.tableStyles.values())
-      .map(({ name, widthAttr, relWidthAttr }) => {
-        const attrs = [
-          'fo:margin-top="0cm"',
-          'fo:margin-bottom="0cm"',
-          'fo:margin-left="0cm"',
-          'fo:margin-right="0cm"',
-          'style:may-break-between-rows="false"',
+
+    const table = Array.from(this.tableStyles.values())
+      .map(s => {
+        const props: string[] = [
           'table:align="left"',
-          'table:border-model="collapsing"'
+          'table:border-model="collapsing"',
         ]
-        if (widthAttr) attrs.push(`style:width="${widthAttr}"`)
-        if (relWidthAttr) attrs.push(`style:rel-width="${relWidthAttr}"`)
-        const attrText = attrs.join(' ')
+        if (s.widthAttr) props.push(`style:width="${s.widthAttr}"`)
+        if (s.relWidthAttr) props.push(`style:rel-width="${s.relWidthAttr}"`)
+
         return `
-    <style:style style:name="${name}" style:family="table">
-      <style:table-properties ${attrText}/>
-    </style:style>`
+      <style:style style:name="${s.name}" style:family="table">
+        <style:table-properties ${props.join(' ')}/>
+      </style:style>`
       })
       .join('')
 
-    const paragraphStyles = Array.from(this.paragraphStyles.values())
-      .map(({ name, props }) => {
-        const attrs: string[] = []
-        if (props.align) {
-          const alignValue = props.align === 'end' ? 'end' : props.align
-          attrs.push(`fo:text-align="${alignValue}"`)
+    const col = Array.from(this.tableColumnStyles.entries())
+      .map(([w, name]) => `
+      <style:style style:name="${name}" style:family="table-column">
+        <style:table-column-properties style:column-width="${w}"/>
+      </style:style>`)
+      .join('')
+
+    const cell = Array.from(this.tableCellStyles.values())
+      .map(c => `
+      <style:style style:name="${c.name}" style:family="table-cell">
+        <style:table-cell-properties fo:border="0.75pt solid #c5ccd6" fo:padding="0.20cm" fo:background-color="${c.backgroundColor}"/>
+      </style:style>`)
+      .join('')
+
+    const span = Array.from(this.spanStyles.values())
+      .map(s => {
+        const p: string[] = ['style:font-name="BodyFont"']
+        if (s.span.bold) p.push(`fo:font-weight="bold"`)
+        if (s.span.italic) p.push(`fo:font-style="italic"`)
+        if (s.span.underline) {
+          p.push(`style:text-underline-style="solid"`)
+          p.push(`style:text-underline-type="single"`)
         }
-        if (props.lineHeight) attrs.push(`fo:line-height="${props.lineHeight}"`)
-        if (props.marginTop) attrs.push(`fo:margin-top="${props.marginTop}"`)
-        if (props.marginBottom) attrs.push(`fo:margin-bottom="${props.marginBottom}"`)
-        if (props.marginLeft) attrs.push(`fo:margin-left="${props.marginLeft}"`)
-        if (props.marginRight) attrs.push(`fo:margin-right="${props.marginRight}"`)
-        if (props.textIndent) attrs.push(`fo:text-indent="${props.textIndent}"`)
-        const attrText = attrs.length ? ` ${attrs.join(' ')}` : ''
+        if (s.span.color) p.push(`fo:color="${s.span.color}"`)
+        if (s.span.fontSize) p.push(`fo:font-size="${s.span.fontSize}"`)
+
         return `
-    <style:style style:name="${name}" style:family="paragraph">
-      <style:paragraph-properties${attrText}/>
-    </style:style>`
+      <style:style style:name="${s.name}" style:family="text">
+        <style:text-properties ${p.join(' ')} />
+      </style:style>`
       })
       .join('')
 
-    const columnStyles = Array.from(this.tableColumnStyles.entries())
-      .map(([width, name]) => {
+    const para = Array.from(this.paragraphStyles.values())
+      .map(s => {
+        const p: string[] = []
+        const props = s.props
+        if (props.align) p.push(`fo:text-align="${props.align}"`)
+        if (props.lineHeight) p.push(`fo:line-height="${props.lineHeight}"`)
+        if (props.marginTop) p.push(`fo:margin-top="${props.marginTop}"`)
+        if (props.marginBottom) p.push(`fo:margin-bottom="${props.marginBottom}"`)
+        if (props.marginLeft) p.push(`fo:margin-left="${props.marginLeft}"`)
+        if (props.marginRight) p.push(`fo:margin-right="${props.marginRight}"`)
+        if (props.textIndent) p.push(`fo:text-indent="${props.textIndent}"`)
         return `
-    <style:style style:name="${name}" style:family="table-column">
-      <style:table-column-properties style:column-width="${width}"/>
-    </style:style>`
+      <style:style style:name="${s.name}" style:family="paragraph">
+        <style:paragraph-properties ${p.join(' ')}/>
+      </style:style>`
       })
       .join('')
 
-    const cellStyles = Array.from(this.tableCellStyles.values())
-      .map(({ name, backgroundColor }) => {
-        return `
-    <style:style style:name="${name}" style:family="table-cell">
-      <style:table-cell-properties fo:border="0.75pt solid #c5ccd6" fo:padding="0.20cm" fo:background-color="${backgroundColor}"/>
-    </style:style>`
-      })
-      .join('')
-
-    const spanStyles = Array.from(this.spanStyles.values())
-      .map(({ name, span }) => {
-        const props: string[] = ['style:font-name="BodyFont"']
-        if (span.bold) props.push('fo:font-weight="bold"')
-        if (span.italic) props.push('fo:font-style="italic"')
-        if (span.underline) {
-          props.push('style:text-underline-style="solid"')
-          props.push('style:text-underline-type="single"')
-        }
-        if (span.color) props.push(`fo:color="${span.color}"`)
-        if (span.fontSize) props.push(`fo:font-size="${span.fontSize}"`)
-
-        const attr = props.join(' ')
-        return `
-    <style:style style:name="${name}" style:family="text">
-      <style:text-properties${attr ? ` ${attr}` : ''}/>
-    </style:style>`
-      })
-      .join('')
-
-    return `${baseStyles}${tableStyles}${columnStyles}${paragraphStyles}${cellStyles}${spanStyles}`
+    return `${base}${table}${col}${cell}${para}${span}`
   }
 
-  private keyForSpan(span: TextSpan): string {
-
-    // ✅ fontFamily가 다르면 다른 스타일로 취급해야 하므로 key에 포함
-    return [
-      span.fontFamily ? `ff:${span.fontFamily}` : 'ff:',
-      span.bold ? 'b1' : 'b0',
-      span.italic ? 'i1' : 'i0',
-      span.underline ? 'u1' : 'u0',
-      span.color ? `c:${span.color}` : 'c:',
-      span.fontSize ? `f:${span.fontSize}` : 'f:'
-    ].join('|')
+  /* -------------------------------------------------------
+   ✅ Utility
+  --------------------------------------------------------*/
+  private computeAbsoluteWidth(widths?: (string | undefined)[]): string | undefined {
+    if (!widths?.length) return undefined
+    const nums = widths.map(w => this.lengthStringToCm(w)).filter((n): n is number => n !== undefined)
+    if (!nums.length) return undefined
+    const total = nums.reduce((a, b) => a + b, 0)
+    return `${total.toFixed(4)}cm`
   }
 
-  private computeAbsoluteWidth(columnWidths?: Array<string | undefined>): string | undefined {
-    if (!columnWidths || columnWidths.length === 0) return undefined
-    const numeric = columnWidths.map(width => this.lengthStringToCm(width))
-    const filtered = numeric.filter((value): value is number => value !== undefined)
-    if (!filtered.length) return undefined
-    const total = filtered.reduce((acc, value) => acc + value, 0)
-    return total > 0 ? `${total.toFixed(4)}cm` : undefined
-  }
-
-  private lengthStringToCm(length?: string): number | undefined {
-    if (!length) return undefined
-    const match = length.trim().match(/^([\d.]+)\s*cm$/i)
-    if (!match) return undefined
-    const numeric = parseFloat(match[1])
-    return Number.isFinite(numeric) && numeric > 0 ? numeric : undefined
+  private lengthStringToCm(v?: string): number | undefined {
+    if (!v) return undefined
+    const m = v.match(/^([\d.]+)\s*cm$/i)
+    if (!m) return undefined
+    const n = parseFloat(m[1])
+    return Number.isFinite(n) && n > 0 ? n : undefined
   }
 }
+

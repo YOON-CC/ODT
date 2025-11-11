@@ -1,3 +1,7 @@
+//------------------------------------------------------
+// applyRichStyles.ts (FULL VERSION)
+//------------------------------------------------------
+
 import { STYLE_MAP, FONT_FAMILY_MAP } from "./styleMap";
 
 export function applyRichStyles(html: string): string {
@@ -10,26 +14,12 @@ export function applyRichStyles(html: string): string {
     el.classList.forEach((cls) => {
       const entry = styleMap[cls];
       if (entry) {
-        Object.entries(entry).forEach(([key, value]) => {
-          const cssKey = toCssKey(key);
-          el.style.setProperty(cssKey, value);
-
-          if (key === "backgroundColor") {
-            el.setAttribute("data-odt-background", value);
-          }
-          if (key === "color") {
-            el.setAttribute("data-odt-color", value);
-          }
-          if (key === "fontSize") {
-            el.setAttribute("data-odt-font-size", value);
-          }
-          if (key === "border") {
-            el.setAttribute("data-odt-border", value);
-          }
+        Object.entries(entry).forEach(([k, v]) => {
+          const cssKey = toCssKey(k);
+          el.style.setProperty(cssKey, v);
         });
       }
 
-      // ✅✅ 폰트 패밀리 클래스 기반 적용 (핵심)
       if (cls === "font-gungsuh") {
         el.setAttribute("data-odt-font-family", "gungsuh");
       }
@@ -56,6 +46,6 @@ export function applyRichStyles(html: string): string {
   return `${baseStyle}<div class="odt-preview-root">${wrapper.innerHTML}</div>`;
 }
 
-function toCssKey(key: string) {
-  return key.replace(/[A-Z]/g, ch => `-${ch.toLowerCase()}`);
+function toCssKey(k: string) {
+  return k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 }

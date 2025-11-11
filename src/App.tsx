@@ -38,7 +38,7 @@ const INLINE_TAG_STYLES: Record<string, SpanStyle> = {
   U: { underline: true }
 }
 
-const SAMPLE_RESPONSE = sampleResponse as OdtJsonDocument
+const SAMPLE_RESPONSE = sampleResponse as any
 const PAGE_CONTENT_WIDTH_CM = 17
 const DEFAULT_CONTENT_WIDTH_PX = (PAGE_CONTENT_WIDTH_CM / 2.54) * 96
 
