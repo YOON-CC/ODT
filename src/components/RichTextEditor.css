@@ -206,8 +206,9 @@
 }
 
 .rte__content .ProseMirror table {
-  width: auto;
+  width: fit-content;
   max-width: 100%;
+  min-width: min(100%, 520px);
   border-collapse: collapse;
   margin: 12px 0;
   table-layout: auto;
@@ -218,6 +219,7 @@
   border: 1px solid #adb5bd;
   padding: 8px 10px;
   position: relative;
+  min-width: 120px;
 }
 
 .rte__content .ProseMirror h1 {
