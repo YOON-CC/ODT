@@ -1,9 +1,11 @@
+// RichTextEditor.tsx
 import { useEffect, useRef, useState } from 'react'
 import type { ChangeEvent } from 'react'
 import { Editor, Extension } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Strike from '@tiptap/extension-strike'
 import TextAlign from '@tiptap/extension-text-align'
 import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
@@ -12,6 +14,14 @@ import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
+
+// Google Docs 스타일: React Icons (Material Design)
+import {
+  MdFormatBold, MdFormatItalic, MdFormatUnderlined, MdStrikethroughS,
+  MdFormatListBulleted, MdFormatListNumbered, MdFormatQuote,
+  MdUndo, MdRedo, MdGridOn, MdDownload
+} from 'react-icons/md'
+
 import './RichTextEditor.css'
 
 type Props = {
@@ -20,6 +30,7 @@ type Props = {
   onDownload?: () => void
 }
 
+/** ===== 기존 폰트 선택용 옵션 (그대로 유지) ===== */
 const FONT_FAMILIES = {
   notoSans: "'Noto Sans KR', 'Apple SD Gothic Neo', 'Segoe UI', 'Helvetica Neue', sans-serif",
   nanumGothic: "'Nanum Gothic', 'Apple SD Gothic Neo', 'Segoe UI', sans-serif",
@@ -27,10 +38,8 @@ const FONT_FAMILIES = {
   gowunDodum: "'Gowun Dodum', 'Apple SD Gothic Neo', sans-serif",
   gungsuh: "'Gungsuh', '궁서', 'GungSeo', 'GungsuhChe', serif"
 } as const
-
 type FontFamilyKey = keyof typeof FONT_FAMILIES
 type FontKey = FontFamilyKey | 'system'
-
 const FONT_OPTIONS: Array<{ key: FontKey; label: string }> = [
   { key: 'notoSans', label: '노토 산스 (Noto Sans KR)' },
   { key: 'nanumGothic', label: '나눔고딕 (Nanum Gothic)' },
@@ -62,96 +71,72 @@ const FONT_SIZE_OPTIONS = [
   { value: '36px', label: '36px' },
   { value: '48px', label: '48px' }
 ] as const
-
 type FontSizeValue = (typeof FONT_SIZE_OPTIONS)[number]['value']
 type FontSizePreset = Exclude<FontSizeValue, typeof FONT_SIZE_DEFAULT>
-
 const FONT_SIZE_PRESET_SET = new Set<FontSizePreset>(
-  FONT_SIZE_OPTIONS.filter(option => option.value !== FONT_SIZE_DEFAULT).map(option => option.value as FontSizePreset)
+  FONT_SIZE_OPTIONS.filter(o => o.value !== FONT_SIZE_DEFAULT).map(o => o.value as FontSizePreset)
 )
 
+/** ===== 셀 배경색 유지 확장 (그대로) ===== */
 const TableCellWithBackground = TableCell.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
       backgroundColor: {
         default: null,
-        parseHTML: element => element.getAttribute('data-background-color') ?? element.style.backgroundColor ?? null,
-        renderHTML: attributes => {
-          const color = attributes.backgroundColor as string | null
-          if (!color) {
-            return {}
-          }
-          return {
-            style: `background-color: ${color}`,
-            'data-background-color': color
-          }
+        parseHTML: el => el.getAttribute('data-background-color') ?? (el as HTMLElement).style.backgroundColor ?? null,
+        renderHTML: attrs => {
+          const color = (attrs as any).backgroundColor as string | null
+          if (!color) return {}
+          return { style: `background-color: ${color}`, 'data-background-color': color }
         }
       }
     }
   }
 })
-
 const TableHeaderWithBackground = TableHeader.extend({
   addAttributes() {
     return {
       ...this.parent?.(),
       backgroundColor: {
         default: null,
-        parseHTML: element => element.getAttribute('data-background-color') ?? element.style.backgroundColor ?? null,
-        renderHTML: attributes => {
-          const color = attributes.backgroundColor as string | null
-          if (!color) {
-            return {}
-          }
-          return {
-            style: `background-color: ${color}`,
-            'data-background-color': color
-          }
+        parseHTML: el => el.getAttribute('data-background-color') ?? (el as HTMLElement).style.backgroundColor ?? null,
+        renderHTML: attrs => {
+          const color = (attrs as any).backgroundColor as string | null
+          if (!color) return {}
+          return { style: `background-color: ${color}`, 'data-background-color': color }
         }
       }
     }
   }
 })
 
+/** ===== 폰트 사이즈 확장 (그대로) ===== */
 const FontSizeExtension = Extension.create({
   name: 'fontSize',
   addGlobalAttributes() {
-    return [
-      {
-        types: ['textStyle'],
-        attributes: {
-          fontSize: {
-            default: null,
-            parseHTML: element => element.style.fontSize || null,
-            renderHTML: attributes => {
-              const size = attributes.fontSize as string | null
-              if (!size) {
-                return {}
-              }
-              return { style: `font-size: ${size}` }
-            }
+    return [{
+      types: ['textStyle'],
+      attributes: {
+        fontSize: {
+          default: null,
+          parseHTML: el => (el as HTMLElement).style.fontSize || null,
+          renderHTML: attrs => {
+            const size = (attrs as any).fontSize as string | null
+            if (!size) return {}
+            return { style: `font-size: ${size}` }
           }
         }
       }
-    ]
+    }]
   },
   addCommands() {
     return {
-      setFontSize:
-        size =>
-        ({ chain }) => {
-          return chain().setMark('textStyle', { fontSize: size }).run()
-        },
-      unsetFontSize:
-        () =>
-        ({ chain }) => {
-          return chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run()
-        }
+      setFontSize: size => ({ chain }) => chain().setMark('textStyle', { fontSize: size }).run(),
+      unsetFontSize: () => ({ chain }) => chain().setMark('textStyle', { fontSize: null }).removeEmptyTextStyle().run()
     }
   }
 })
-
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     fontSize: {
@@ -162,68 +147,44 @@ declare module '@tiptap/core' {
 }
 
 export default function RichTextEditor({ value, onChange, onDownload }: Props) {
+  // ===== 기존 UI 상태들 유지 =====
   const [fontKey, setFontKey] = useState<FontKey>('system')
   const [fontColor, setFontColor] = useState<string>(DEFAULT_COLOR)
   const [fontSize, setFontSize] = useState<FontSizeValue>(FONT_SIZE_DEFAULT)
   const [cellBackground, setCellBackground] = useState<string>('')
   const [isTableSelection, setIsTableSelection] = useState<boolean>(false)
   const [isTablePickerOpen, setIsTablePickerOpen] = useState<boolean>(false)
-  const [tablePickerHover, setTablePickerHover] = useState<{ rows: number; cols: number }>(
-    TABLE_PICKER_DEFAULT_SIZE
-  )
+  const [tablePickerHover, setTablePickerHover] = useState<{ rows: number; cols: number }>(TABLE_PICKER_DEFAULT_SIZE)
   const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
   const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
 
   const editor = useEditor({
     extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [1, 2, 3, 4]
-        }
-      }),
+      StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Underline,
-      TextAlign.configure({
-        types: ['heading', 'paragraph']
-      }),
-      Color.configure({
-        types: ['textStyle']
-      }),
+      Strike,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
       TextStyle,
+      Color.configure({ types: ['textStyle'] }),
       FontFamily,
       FontSizeExtension,
-      Table.configure({
-        resizable: true,
-        // columnResizing: {
-        //   handleWidth: 6,
-        //   cellMinWidth: 40,
-        //   useTableWidth: true
-        // },
-        HTMLAttributes: {
-          class: 'tiptap-table'
-        }
-      }),
+      Table.configure({ resizable: true, HTMLAttributes: { class: 'tiptap-table' } }),
       TableRow,
       TableHeaderWithBackground,
       TableCellWithBackground
     ],
     content: value,
     autofocus: false,
-    onUpdate: ({ editor: instance }) => {
-      const html = instance.getHTML()
-      onChange(html)
-    },
+    onUpdate: ({ editor: instance }) => onChange(instance.getHTML()),
     onSelectionUpdate: ({ editor: instance }) => {
       const currentFamily = String(instance.getAttributes('textStyle').fontFamily ?? '').trim()
-      const nextKey = resolveFontKey(currentFamily)
-      setFontKey(prev => (prev === nextKey ? prev : nextKey))
+      setFontKey(resolveFontKey(currentFamily))
 
       const currentColor = String(instance.getAttributes('textStyle').color ?? '')
-      const nextColor = normalizeColorValue(currentColor)
-      setFontColor(prev => (prev === nextColor ? prev : nextColor))
+      setFontColor(normalizeColorValue(currentColor))
 
       const currentSize = String(instance.getAttributes('textStyle').fontSize ?? '')
-      const nextSize = normalizeFontSizeValue(currentSize)
-      setFontSize(prev => (prev === nextSize ? prev : nextSize))
+      setFontSize(normalizeFontSizeValue(currentSize))
 
       const activeInTable = instance.isActive('tableCell') || instance.isActive('tableHeader')
       setIsTableSelection(activeInTable)
@@ -231,612 +192,291 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
       if (activeInTable) {
         const cellAttrs = instance.getAttributes('tableCell')
         const headerAttrs = instance.getAttributes('tableHeader')
-        const backgroundRaw = String(
-          cellAttrs.backgroundColor ?? headerAttrs.backgroundColor ?? ''
-        )
-        const nextBackground = normalizeOptionalColorValue(backgroundRaw)
-        setCellBackground(prev => (prev === nextBackground ? prev : nextBackground))
+        const backgroundRaw = String(cellAttrs.backgroundColor ?? headerAttrs.backgroundColor ?? '')
+        setCellBackground(normalizeOptionalColorValue(backgroundRaw))
       } else {
-        setCellBackground(prev => (prev === '' ? prev : ''))
+        setCellBackground('')
       }
     }
   })
 
+  // 외부 value ↔ editor 동기화
   useEffect(() => {
     if (!editor) return
     const current = editor.getHTML()
     if (current === value) return
-
     const { from, to } = editor.state.selection
     editor.commands.setContent(value, false)
     editor.commands.setTextSelection({ from, to })
   }, [editor, value])
 
-  useEffect(() => {
-    if (!editor) return
-    const initialColor = normalizeColorValue(String(editor.getAttributes('textStyle').color ?? ''))
-    setFontColor(initialColor)
-
-    const initialSize = normalizeFontSizeValue(String(editor.getAttributes('textStyle').fontSize ?? ''))
-    setFontSize(initialSize)
-  }, [editor])
-
-  useEffect(() => {
-    if (!isTablePickerOpen) return
-
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node | null
-      if (
-        !target ||
-        tablePickerAnchorRef.current?.contains(target) ||
-        tablePickerPopoverRef.current?.contains(target)
-      ) {
-        return
-      }
-      setIsTablePickerOpen(false)
-    }
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsTablePickerOpen(false)
-      }
-    }
-
-    window.addEventListener('mousedown', handleClickOutside)
-    window.addEventListener('keydown', handleEscape)
-    return () => {
-      window.removeEventListener('mousedown', handleClickOutside)
-      window.removeEventListener('keydown', handleEscape)
-    }
-  }, [isTablePickerOpen])
-
   if (!editor) return null
 
-  const exec = (action: (instance: Editor) => void) => () => {
-    if (!editor) return
-    action(editor)
-  }
-
+  // ===== helpers =====
+  const exec = (action: (instance: Editor) => void) => () => editor && action(editor)
   const isActive = (name: string, attrs?: Record<string, unknown>) => editor?.isActive(name, attrs) ?? false
+  const btn = (active: boolean) => (active ? 'gdoc__btn is-active' : 'gdoc__btn')
 
-  const getButtonClass = (active: boolean) => (active ? 'rte__icon-button active' : 'rte__icon-button')
-
-  const handleFontChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    if (!editor) return
-    const nextFontKey = event.target.value as FontKey
-    setFontKey(nextFontKey)
-    if (nextFontKey === 'system') {
-      editor.chain().focus().unsetFontFamily().run()
-      return
-    }
-    const fontFamily = FONT_FAMILIES[nextFontKey as FontFamilyKey]
-    editor.chain().focus().setFontFamily(fontFamily).run()
+  // heading dropdown (구글툴바 왼쪽)
+  const currentHeadingLevel =
+    (editor.isActive('heading', { level: 1 }) && 'h1') ||
+    (editor.isActive('heading', { level: 2 }) && 'h2') ||
+    (editor.isActive('heading', { level: 3 }) && 'h3') ||
+    'p'
+  const onHeadingChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const v = e.target.value
+    if (v === 'p') editor.chain().focus().setParagraph().run()
+    if (v === 'h1') editor.chain().focus().toggleHeading({ level: 1 }).run()
+    if (v === 'h2') editor.chain().focus().toggleHeading({ level: 2 }).run()
+    if (v === 'h3') editor.chain().focus().toggleHeading({ level: 3 }).run()
   }
 
-  const handleColorChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!editor) return
-    const nextColor = event.target.value
-    setFontColor(nextColor)
-    editor.chain().focus().setColor(nextColor).run()
+  // ===== 기존 핸들러들 (오른쪽 raw append) =====
+  const handleFontChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const nextKey = e.target.value as FontKey
+    setFontKey(nextKey)
+    if (nextKey === 'system') editor?.chain().focus().unsetFontFamily().run()
+    else editor?.chain().focus().setFontFamily(FONT_FAMILIES[nextKey as FontFamilyKey]).run()
   }
-
+  const handleColorChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value
+    setFontColor(next)
+    editor?.chain().focus().setColor(next).run()
+  }
   const handleColorReset = () => {
-    if (!editor) return
-    editor.chain().focus().unsetColor().run()
+    editor?.chain().focus().unsetColor().run()
     setFontColor(DEFAULT_COLOR)
   }
-
-  const handleCellBackgroundChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!editor) return
-    const nextColor = event.target.value
-    setCellBackground(nextColor)
-    editor.chain().focus().setCellAttribute('backgroundColor', nextColor).run()
+  const handleCellBackgroundChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const next = e.target.value
+    setCellBackground(next)
+    editor?.chain().focus().setCellAttribute('backgroundColor', next).run()
   }
-
   const handleCellBackgroundReset = () => {
-    if (!editor) return
-    editor.chain().focus().setCellAttribute('backgroundColor', '').run()
+    editor?.chain().focus().setCellAttribute('backgroundColor', '').run()
     setCellBackground('')
   }
-
-  const handleFontSizeChange = (event: ChangeEvent<HTMLSelectElement>) => {
-    if (!editor) return
-    const nextSize = event.target.value as FontSizeValue
-    setFontSize(nextSize)
-
-    if (nextSize === FONT_SIZE_DEFAULT) {
-      editor.chain().focus().unsetFontSize().run()
-      return
-    }
-
-    editor.chain().focus().setFontSize(nextSize).run()
+  const handleFontSizeChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const next = e.target.value as FontSizeValue
+    setFontSize(next)
+    if (next === FONT_SIZE_DEFAULT) editor?.chain().focus().unsetFontSize().run()
+    else editor?.chain().focus().setFontSize(next).run()
   }
-
   const handleFontSizeReset = () => {
-    if (!editor) return
-    editor.chain().focus().unsetFontSize().run()
+    editor?.chain().focus().unsetFontSize().run()
     setFontSize(FONT_SIZE_DEFAULT)
   }
 
-  if (!editor) {
-    return <div className="rte rte--loading" />
-  }
+  // 테이블 픽커 닫힘 처리
+  useEffect(() => {
+    if (!isTablePickerOpen) return
+    const onDown = (ev: MouseEvent) => {
+      const t = ev.target as Node
+      if (tablePickerAnchorRef.current?.contains(t)) return
+      if (tablePickerPopoverRef.current?.contains(t)) return
+      setIsTablePickerOpen(false)
+    }
+    const onEsc = (ev: KeyboardEvent) => { if (ev.key === 'Escape') setIsTablePickerOpen(false) }
+    window.addEventListener('mousedown', onDown)
+    window.addEventListener('keydown', onEsc)
+    return () => {
+      window.removeEventListener('mousedown', onDown)
+      window.removeEventListener('keydown', onEsc)
+    }
+  }, [isTablePickerOpen])
 
   return (
-    <div className="rte">
-      <div className="rte__toolbar">
-        <div className="rte__toolbar-group rte__toolbar-group--primary">
-          <label htmlFor="rte-font-family" className="rte__group-label">
-            텍스트 스타일
-          </label>
-          <select
-            id="rte-font-family"
-            className="rte__select rte__select--wide"
-            value={fontKey}
-            onChange={handleFontChange}
-          >
-            {FONT_OPTIONS.map(option => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
+    <div className="gdoc">
+      {/* ===== 왼쪽: 구글 Docs 스타일 새 툴바 ===== */}
+      <div className="gdoc__toolbar">
+        {/* 텍스트 스타일 */}
+        <div className="gdoc__group">
+          <select className="gdoc__select" value={currentHeadingLevel} onChange={onHeadingChange} title="텍스트 스타일">
+            <option value="p">본문</option>
+            <option value="h1">제목 1</option>
+            <option value="h2">제목 2</option>
+            <option value="h3">제목 3</option>
           </select>
         </div>
 
-        <div className="rte__toolbar-group">
-          <label htmlFor="rte-font-color" className="rte__group-label">
-            글자색
-          </label>
-          <input
-            id="rte-font-color"
-            type="color"
-            className="rte__color-input"
-            value={fontColor}
-            onChange={handleColorChange}
-            title="글자색 선택"
-          />
-          <button type="button" className="rte__chip-button" onClick={handleColorReset}>
-            기본
-          </button>
+        {/* 굵게 / 기울기 / 밑줄 / 취소선 */}
+        <div className="gdoc__group">
+          <button type="button" className={btn(isActive('bold'))} onClick={exec(i => i.chain().focus().toggleBold().run())} title="굵게"><MdFormatBold size={20} /></button>
+          <button type="button" className={btn(isActive('italic'))} onClick={exec(i => i.chain().focus().toggleItalic().run())} title="기울임"><MdFormatItalic size={20} /></button>
+          <button type="button" className={btn(isActive('underline'))} onClick={exec(i => i.chain().focus().toggleUnderline().run())} title="밑줄"><MdFormatUnderlined size={20} /></button>
+          <button type="button" className={btn(isActive('strike'))} onClick={exec(i => i.chain().focus().toggleStrike().run())} title="취소선"><MdStrikethroughS size={20} /></button>
         </div>
 
-        <div className="rte__toolbar-group">
-          <label htmlFor="rte-font-size" className="rte__group-label">
-            글자 크기
-          </label>
-          <select
-            id="rte-font-size"
-            className="rte__select"
-            value={fontSize}
-            onChange={handleFontSizeChange}
-          >
-            {FONT_SIZE_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-          <button type="button" className="rte__chip-button" onClick={handleFontSizeReset}>
-            기본
-          </button>
+        {/* 리스트 */}
+        <div className="gdoc__group">
+          <button type="button" className={btn(isActive('bulletList'))} onClick={exec(i => i.chain().focus().toggleBulletList().run())} title="글머리 기호"><MdFormatListBulleted size={20} /></button>
+          <button type="button" className={btn(isActive('orderedList'))} onClick={exec(i => i.chain().focus().toggleOrderedList().run())} title="번호 매기기"><MdFormatListNumbered size={20} /></button>
         </div>
 
-        <div className="rte__toolbar-group">
-          <label htmlFor="rte-cell-background" className="rte__group-label">
-            셀 배경
-          </label>
-          <input
-            id="rte-cell-background"
-            type="color"
-            className="rte__color-input"
-            value={cellBackground || DEFAULT_CELL_BACKGROUND}
-            onChange={handleCellBackgroundChange}
-            disabled={!isTableSelection}
-            title="표 셀 배경색 선택"
-          />
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isTableSelection}
-            onClick={handleCellBackgroundReset}
-          >
-            없음
-          </button>
+        {/* 인용구 */}
+        <div className="gdoc__group">
+          <button type="button" className={btn(isActive('blockquote'))} onClick={exec(i => i.chain().focus().toggleBlockquote().run())} title="인용구"><MdFormatQuote size={20} /></button>
         </div>
 
-        <div className="rte__toolbar-separator" />
-
-        <div className="rte__toolbar-group rte__toolbar-group--compact">
-          <button
-            type="button"
-            className={getButtonClass(isActive('heading', { level: 1 }))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleHeading({ level: 1 }).run()
-            })}
-          >
-            H1
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('heading', { level: 2 }))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleHeading({ level: 2 }).run()
-            })}
-          >
-            H2
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('heading', { level: 3 }))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleHeading({ level: 3 }).run()
-            })}
-          >
-            H3
-          </button>
+        {/* Undo / Redo */}
+        <div className="gdoc__group">
+          <button type="button" className="gdoc__btn" onClick={exec(i => i.chain().focus().undo().run())} title="실행 취소"><MdUndo size={20} /></button>
+          <button type="button" className="gdoc__btn" onClick={exec(i => i.chain().focus().redo().run())} title="다시 실행"><MdRedo size={20} /></button>
         </div>
 
-        <div className="rte__toolbar-group rte__toolbar-group--compact">
-          <button
-            type="button"
-            className={getButtonClass(isActive('bold'))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleBold().run()
-            })}
-          >
-            B
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('italic'))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleItalic().run()
-            })}
-          >
-            I
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('underline'))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleUnderline().run()
-            })}
-          >
-            U
-          </button>
-        </div>
-
-        <div className="rte__toolbar-group rte__toolbar-group--compact">
-          <button
-            type="button"
-            className={getButtonClass(isActive('bulletList'))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleBulletList().run()
-            })}
-          >
-            •
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('orderedList'))}
-            onClick={exec(instance => {
-              instance.chain().focus().toggleOrderedList().run()
-            })}
-          >
-            1.
-          </button>
-        </div>
-
-        <div className="rte__toolbar-group rte__toolbar-group--compact">
-          <button
-            type="button"
-            className={getButtonClass(isActive('textAlign', { textAlign: 'left' }))}
-            onClick={exec(instance => {
-              instance.chain().focus().setTextAlign('left').run()
-            })}
-          >
-            좌
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('textAlign', { textAlign: 'center' }))}
-            onClick={exec(instance => {
-              instance.chain().focus().setTextAlign('center').run()
-            })}
-          >
-            중
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('textAlign', { textAlign: 'right' }))}
-            onClick={exec(instance => {
-              instance.chain().focus().setTextAlign('right').run()
-            })}
-          >
-            우
-          </button>
-          <button
-            type="button"
-            className={getButtonClass(isActive('textAlign', { textAlign: 'justify' }))}
-            onClick={exec(instance => {
-              instance.chain().focus().setTextAlign('justify').run()
-            })}
-          >
-            양
-          </button>
-        </div>
-
-        <div className="rte__table-picker" ref={tablePickerAnchorRef}>
-          <button
-            type="button"
-            className={getButtonClass(isTablePickerOpen)}
-            onMouseDown={event => {
-              event.preventDefault()
-            }}
-            onClick={() => {
-              setIsTablePickerOpen(prev => {
-                const next = !prev
-                if (!prev && editor) {
-                  editor.chain().focus().run()
-                }
-                if (!prev) {
-                  setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
-                }
+        {/* 표 삽입 */}
+        <div className="gdoc__group">
+          <button type="button" className="rte__chip-button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => setIsTablePickerOpen(p => {
+                const next = !p
+                if (!p) setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
+                if (!p) editor?.chain().focus().run()
                 return next
-              })
-            }}
-          >
-            표 추가
-          </button>
-
-          {isTablePickerOpen ? (
-            <div className="rte__table-picker-popover" ref={tablePickerPopoverRef}>
-              <div className="rte__table-picker-preview">
-                {Math.max(tablePickerHover.rows, 1)} × {Math.max(tablePickerHover.cols, 1)} 표
-              </div>
-              <div className="rte__table-picker-grid">
-                {Array.from({ length: TABLE_PICKER_MAX_ROWS }).map((_, rowIndex) => (
-                  <div key={`row-${rowIndex}`} className="rte__table-picker-row">
-                    {Array.from({ length: TABLE_PICKER_MAX_COLS }).map((__, colIndex) => {
-                      const rows = rowIndex + 1
-                      const cols = colIndex + 1
-                      const isActiveCell =
-                        rows <= Math.max(tablePickerHover.rows, 0) &&
-                        cols <= Math.max(tablePickerHover.cols, 0)
-                      return (
-                        <button
-                          type="button"
-                          key={`cell-${rowIndex}-${colIndex}`}
-                          className={`rte__table-picker-cell${isActiveCell ? ' selected' : ''}`}
-                          onMouseEnter={() => {
-                            setTablePickerHover({ rows, cols })
-                          }}
-                          onFocus={() => {
-                            setTablePickerHover({ rows, cols })
-                          }}
-                          onMouseDown={event => {
-                            event.preventDefault()
-                          }}
-                          onClick={() => {
-                            const insertRows = Math.max(rows, 1)
-                            const insertCols = Math.max(cols, 1)
-                            editor
-                              ?.chain()
-                              .focus()
-                              .insertTable({
-                                rows: insertRows,
-                                cols: insertCols,
-                                withHeaderRow: false
-                              })
-                              .run()
-                            setIsTablePickerOpen(false)
-                          }}
-                        />
-                      )
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="rte__toolbar-group rte__toolbar-group--table">
-          {onDownload ? (
-            <button type="button" className="rte__download-button" onClick={onDownload}>
-              .odt 다운로드
+              })}
+            >
+              <MdGridOn size={20} />
             </button>
-          ) : null}
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().deleteTable().run()
-            })}
-          >
-            표 삭제
-          </button>
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().addColumnBefore().run()
-            })}
-          >
-            열 + 좌
-          </button>
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().addColumnAfter().run()
-            })}
-          >
-            열 + 우
-          </button>
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().addRowBefore().run()
-            })}
-          >
-            행 + 상
-          </button>
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().addRowAfter().run()
-            })}
-          >
-            행 + 하
-          </button>
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().deleteColumn().run()
-            })}
-          >
-            열 삭제
-          </button>
-          <button
-            type="button"
-            className="rte__chip-button"
-            disabled={!isActive('table')}
-            onClick={exec(instance => {
-              instance.chain().focus().deleteRow().run()
-            })}
-          >
-            행 삭제
+            {isTablePickerOpen && (
+              <div className="rte__table-picker-popover" ref={tablePickerPopoverRef}>
+                <div className="rte__table-picker-preview">
+                  {Math.max(tablePickerHover.rows, 1)} × {Math.max(tablePickerHover.cols, 1)} 표
+                </div>
+                <div className="rte__table-picker-grid">
+                  {Array.from({ length: TABLE_PICKER_MAX_ROWS }).map((_, r) => (
+                    <div key={`row-${r}`} className="rte__table-picker-row">
+                      {Array.from({ length: TABLE_PICKER_MAX_COLS }).map((__, c) => {
+                        const rows = r + 1, cols = c + 1
+                        const active = rows <= Math.max(tablePickerHover.rows, 0) && cols <= Math.max(tablePickerHover.cols, 0)
+                        return (
+                          <button key={`cell-${r}-${c}`} type="button"
+                                  className={`rte__table-picker-cell${active ? ' selected' : ''}`}
+                                  onMouseEnter={() => setTablePickerHover({ rows, cols })}
+                                  onFocus={() => setTablePickerHover({ rows, cols })}
+                                  onMouseDown={e => e.preventDefault()}
+                                  onClick={() => {
+                                    editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: false }).run()
+                                    setIsTablePickerOpen(false)
+                                  }}
+                          />
+                        )
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+        </div>
+
+        {/* 다운로드 */}
+        <div className="gdoc__group gdoc__group--right">
+          <button type="button" className="gdoc__download" onClick={() => onDownload?.()} title=".odt 다운로드">
+            <MdDownload size={18} /><span>.odt 다운로드</span>
           </button>
         </div>
+
+        {/* ===== 오른쪽 끝: 기존 기능들 Raw Append (UI 깨져도 OK) ===== */}
+        {/* <div className="legacy-inline">
+          <label className="rte__group-label">텍스트 스타일</label>
+          <select className="rte__select rte__select--wide" value={fontKey} onChange={handleFontChange}>
+            {FONT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
+          </select>
+
+          <label className="rte__group-label">글자 크기</label>
+          <select className="rte__select" value={fontSize} onChange={handleFontSizeChange}>
+            {FONT_SIZE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          <button type="button" className="rte__chip-button" onClick={handleFontSizeReset}>기본</button>
+
+          <label className="rte__group-label">글자색</label>
+          <input type="color" className="rte__color-input" value={fontColor} onChange={handleColorChange} title="글자색 선택" />
+          <button type="button" className="rte__chip-button" onClick={handleColorReset}>기본</button>
+
+          <label className="rte__group-label">셀 배경</label>
+          <input type="color" className="rte__color-input" value={cellBackground || DEFAULT_CELL_BACKGROUND}
+                 onChange={handleCellBackgroundChange} disabled={!isTableSelection} title="표 셀 배경색 선택"/>
+          <button type="button" className="rte__chip-button" disabled={!isTableSelection} onClick={handleCellBackgroundReset}>없음</button>
+
+          <div className="rte__table-picker" ref={tablePickerAnchorRef}>
+            <button type="button" className="rte__chip-button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => setIsTablePickerOpen(p => {
+                const next = !p
+                if (!p) setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
+                if (!p) editor?.chain().focus().run()
+                return next
+              })}
+            >
+              표 추가(픽커)
+            </button>
+
+          </div>
+
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteTable().run())}>표 삭제</button>
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addColumnBefore().run())}>열 + 좌</button>
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addColumnAfter().run())}>열 + 우</button>
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addRowBefore().run())}>행 + 상</button>
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addRowAfter().run())}>행 + 하</button>
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteColumn().run())}>열 삭제</button>
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteRow().run())}>행 삭제</button>
+        </div> */}
       </div>
 
-      <EditorContent editor={editor} className="rte__content" />
+      {/* 본문 */}
+      <EditorContent editor={editor} className="gdoc__content" />
     </div>
   )
 }
 
+/* ===== 기존 유틸 함수들 ===== */
 function resolveFontKey(fontFamily: string): FontKey {
-  if (!fontFamily) {
-    return 'system'
-  }
-
+  if (!fontFamily) return 'system'
   const normalized = normalizeFontValue(fontFamily)
-  const matched = (Object.entries(FONT_FAMILIES) as Array<[FontFamilyKey, string]>).find(
-    ([, value]) => normalizeFontValue(value) === normalized
-  )
-
-  if (matched) {
-    return matched[0]
-  }
-
-  return 'system'
+  const matched = (Object.entries(FONT_FAMILIES) as Array<[FontFamilyKey, string]>)
+    .find(([, v]) => normalizeFontValue(v) === normalized)
+  return matched ? matched[0] : 'system'
 }
-
 function normalizeFontValue(value: string): string {
-  return value
-    .replace(/['"]/g, '')
-    .split(',')
-    .map(part => part.trim().toLowerCase())
-    .filter(Boolean)
-    .join(',')
+  return value.replace(/['"]/g, '')
+    .split(',').map(p => p.trim().toLowerCase()).filter(Boolean).join(',')
 }
-
 function normalizeFontSizeValue(value: string): FontSizeValue {
-  const trimmed = value.trim().toLowerCase()
-
-  if (!trimmed) {
-    return FONT_SIZE_DEFAULT
-  }
-
-  if (FONT_SIZE_PRESET_SET.has(trimmed as FontSizePreset)) {
-    return trimmed as FontSizeValue
-  }
-
-  const compact = trimmed.replace(/\s+/g, '')
-  if (FONT_SIZE_PRESET_SET.has(compact as FontSizePreset)) {
-    return compact as FontSizeValue
-  }
-
+  const t = value.trim().toLowerCase()
+  if (!t) return FONT_SIZE_DEFAULT
+  if (FONT_SIZE_PRESET_SET.has(t as FontSizePreset)) return t as FontSizeValue
+  const compact = t.replace(/\s+/g, '')
+  if (FONT_SIZE_PRESET_SET.has(compact as FontSizePreset)) return compact as FontSizeValue
   return FONT_SIZE_DEFAULT
 }
-
 function normalizeOptionalColorValue(value: string): string {
-  const trimmed = value.trim().toLowerCase()
-
-  if (!trimmed || trimmed === 'transparent') {
-    return ''
+  const t = value.trim().toLowerCase()
+  if (!t || t === 'transparent') return ''
+  if (/^#[0-9a-f]{3,8}$/.test(t)) {
+    if (t.length === 4) { const [r,g,b] = t.slice(1); return `#${r}${r}${g}${g}${b}${b}` }
+    if (t.length === 9) return t.slice(0,7)
+    return t
   }
-
-  if (/^#[0-9a-f]{3,8}$/.test(trimmed)) {
-    if (trimmed.length === 4) {
-      const [r, g, b] = trimmed.slice(1)
-      return `#${r}${r}${g}${g}${b}${b}`
-    }
-    if (trimmed.length === 7) {
-      return trimmed
-    }
-    if (trimmed.length === 9) {
-      return trimmed.slice(0, 7)
-    }
-    return trimmed
-  }
-
-  const rgbMatch = trimmed.match(/^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})/)
-  if (rgbMatch) {
-    const [r, g, b] = rgbMatch.slice(1, 4).map(channel => clampColorChannel(Number.parseInt(channel, 10)))
+  const m = t.match(/^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})/)
+  if (m) {
+    const [r,g,b] = m.slice(1,4).map(n => clampColorChannel(Number.parseInt(n,10)))
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`
   }
-
   return ''
 }
-
 function normalizeColorValue(value: string): string {
-  const trimmed = value.trim().toLowerCase()
-
-  if (!trimmed) {
+  const t = value.trim().toLowerCase()
+  if (!t) return DEFAULT_COLOR
+  if (t.startsWith('#')) {
+    if (t.length === 4) { const [r,g,b] = t.slice(1).split(''); return `#${r}${r}${g}${g}${b}${b}` }
+    if (t.length === 7) return t
     return DEFAULT_COLOR
   }
-
-  if (trimmed.startsWith('#')) {
-    if (trimmed.length === 4) {
-      const [r, g, b] = trimmed.slice(1).split('')
-      return `#${r}${r}${g}${g}${b}${b}`
-    }
-
-    if (trimmed.length === 7) {
-      return trimmed
-    }
-
-    return DEFAULT_COLOR
-  }
-
-  const match = trimmed.match(/^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})/)
-  if (match) {
-    const [r, g, b] = match.slice(1, 4).map(channel => clampColorChannel(Number.parseInt(channel, 10)))
+  const m = t.match(/^rgba?\((\d{1,3}),\s*(\d{1,3}),\s*(\d{1,3})/)
+  if (m) {
+    const [r,g,b] = m.slice(1,4).map(n => clampColorChannel(Number.parseInt(n,10)))
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`
   }
-
   return DEFAULT_COLOR
 }
-
-function clampColorChannel(value: number): number {
-  if (Number.isNaN(value)) {
-    return 0
-  }
-
-  return Math.min(255, Math.max(0, value))
-}
-
-function toHex(value: number): string {
-  return value.toString(16).padStart(2, '0')
-}
+function clampColorChannel(value: number) { return Math.min(255, Math.max(0, Number.isNaN(value) ? 0 : value)) }
+function toHex(value: number) { return value.toString(16).padStart(2,'0') }

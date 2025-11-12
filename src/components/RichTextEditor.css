@@ -1,354 +1,175 @@
-@import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Nanum+Gothic&family=Nanum+Myeongjo&family=Noto+Sans+KR:wght@400;700&display=swap');
-
-.rte {
+/* ===== Google Docs 스타일 툴바 ===== */
+.gdoc {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border: 1px solid #e4e7ec;
-  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   overflow: hidden;
-  background: linear-gradient(180deg, #f6f8fc 0%, #ffffff 60%);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  background: #fff;
 }
 
-.rte__toolbar {
+.gdoc__toolbar {
   display: flex;
   align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f8fafc;
   flex-wrap: wrap;
-  gap: 16px;
-  padding: 14px 20px;
-  border-bottom: 1px solid #e4e7ec;
-  background-color: #ffffff;
 }
 
-.rte__toolbar-group {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.rte__toolbar-group--primary {
-  padding-right: 16px;
-  border-right: 1px solid #edf0f6;
-  margin-right: 8px;
-}
-
-.rte__toolbar-group--compact {
-  gap: 6px;
-  padding: 6px 8px;
-  border-radius: 10px;
-  background: #f8fafc;
-  border: 1px solid #e4e7ec;
-  box-shadow: inset 0 1px 2px rgba(148, 163, 184, 0.2);
-}
-
-.rte__toolbar-group--table {
-  gap: 6px;
-  margin-left: auto;
-}
-
-.rte__download-button {
-  border: none;
-  border-radius: 14px;
-  padding: 8px 18px;
-  font-size: 13px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  color: #ffffff;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.2s ease, opacity 0.2s ease;
-}
-
-.rte__download-button:hover:not(:disabled),
-.rte__download-button:focus-visible {
-  outline: none;
-  transform: translateY(-1px);
-  box-shadow: 0 16px 28px rgba(37, 99, 235, 0.3);
-}
-
-.rte__download-button:active {
-  transform: translateY(0);
-  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
-}
-
-.rte__download-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.rte__group-label {
-  font-size: 12px;
-  color: #475467;
-  font-weight: 600;
-}
-
-.rte__select {
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  padding: 6px 12px;
-  font-size: 13px;
-  background-color: #f9f9fb;
-  color: #1f2937;
-  min-width: 130px;
-  appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, #94a3b8 50%),
-    linear-gradient(135deg, #94a3b8 50%, transparent 50%);
-  background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
-  background-size: 6px 6px, 6px 6px;
-  background-repeat: no-repeat;
-  padding-right: 28px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.rte__select--wide {
-  min-width: 200px;
-}
-
-.rte__select:focus {
-  outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
-}
-
-.rte__color-input {
-  width: 34px;
-  height: 34px;
-  border: 1px solid #d0d5dd;
-  border-radius: 10px;
-  padding: 0;
-  background-color: #ffffff;
-  cursor: pointer;
-}
-
-.rte__color-input::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-
-.rte__color-input::-webkit-color-swatch {
-  border: none;
-  border-radius: 8px;
-}
-
-.rte__chip-button {
-  border: 1px solid #d0d5dd;
-  border-radius: 999px;
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  background-color: #ffffff;
-  color: #475467;
-  cursor: pointer;
-  transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
-}
-
-.rte__chip-button:hover:not(:disabled) {
-  background-color: #f1f5f9;
-  border-color: #cbd5f5;
-  color: #1d4ed8;
-}
-
-.rte__chip-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.rte__icon-button {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: #f8fafc;
-  color: #1f2937;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 0.15s ease, box-shadow 0.2s ease, background-color 0.2s ease,
-    color 0.2s ease, border-color 0.2s ease;
-}
-
-.rte__icon-button:hover:not(:disabled),
-.rte__icon-button:focus-visible {
-  outline: none;
-  background-color: #eef2ff;
-  color: #1d4ed8;
-  border-color: #c7d2fe;
-  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.2);
-}
-
-.rte__icon-button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-  box-shadow: none;
-}
-
-.rte__icon-button.active {
-  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-  border-color: #1e40af;
-  color: #ffffff;
-  box-shadow: 0 14px 24px rgba(37, 99, 235, 0.35);
-}
-
-.rte__toolbar-separator {
-  width: 1px;
-  height: 32px;
-  background: linear-gradient(to bottom, transparent, #d8dee9, transparent);
-}
-
-.rte__table-picker {
+.gdoc__group {
   position: relative;
   display: flex;
   align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  background: transparent;
 }
 
-.rte__content {
+.gdoc__group--right { margin-left: auto; }
+
+.gdoc__select {
+  appearance: none;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 28px 6px 10px;
+  font-size: 13px;
+  color: #111827;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #6b7280 50%),
+    linear-gradient(135deg, #6b7280 50%, transparent 50%);
+  background-position: calc(100% - 14px) 50%, calc(100% - 10px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.gdoc__btn {
+  min-width: 34px;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #1f2937;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+.gdoc__btn:hover {
+  background: #eef2ff;
+  color: #1d4ed8;
+  border-color: #c7d2fe;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+}
+.gdoc__btn.is-active {
+  background: #1d4ed8;
+  color: #fff;
+  border-color: #1e40af;
+}
+
+.gdoc__download {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 12px;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+}
+.gdoc__download:hover { transform: translateY(-1px); box-shadow: 0 8px 16px rgba(37,99,235,.25); }
+
+/* 오른쪽 끝에 기존 기능들 Raw로 붙일 영역 */
+.legacy-inline {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  margin-left: auto; /* 끝으로 밀어붙이기 */
+  flex-wrap: wrap;
+}
+
+/* ===== 본문 ===== */
+.gdoc__content {
   flex: 1;
-  padding: 36px 0;
   overflow-y: auto;
-  background-color: #ecf1f8;
+  background: #f3f4f6;
+  padding: 24px 0;
   display: flex;
   justify-content: center;
 }
-
-.rte__content .ProseMirror {
+.gdoc__content .ProseMirror {
   width: 21cm;
   max-width: calc(100% - 48px);
-  margin: 0 auto 48px;
+  min-height: calc(100% - 4cm);
+  margin: 0 auto 36px;
   padding: 2cm;
   box-sizing: border-box;
-  min-height: calc(100% - 4cm);
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.15);
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.06);
   outline: none;
   font-family: 'Inter', 'Apple SD Gothic Neo', 'Malgun Gothic', Arial, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   color: #1f2328;
 }
+.gdoc__content .ProseMirror p { margin: 0 0 12px; }
+.gdoc__content .ProseMirror ul,
+.gdoc__content .ProseMirror ol { padding-left: 24px; }
+.gdoc__content .ProseMirror h1 { font-size: 32px; margin: 24px 0 16px; }
+.gdoc__content .ProseMirror h2 { font-size: 28px; margin: 22px 0 14px; }
+.gdoc__content .ProseMirror h3 { font-size: 22px; margin: 20px 0 12px; }
 
-.rte__content .ProseMirror ::selection,
-.rte__content .ProseMirror *::selection {
-  background-color: rgba(255, 237, 99, 0.8);
-  color: #121212;
+/* ===== (기존 스타일들 최소 유지 — raw append 용) ===== */
+.rte__group-label { font-size: 12px; color: #475467; font-weight: 600; }
+.rte__select {
+  border: 1px solid #d0d5dd; border-radius: 10px; padding: 6px 12px;
+  font-size: 13px; background-color: #fff; color: #1f2937;
+}
+.rte__select--wide { min-width: 200px; }
+.rte__color-input {
+  width: 34px; height: 34px; border: 1px solid #d0d5dd; border-radius: 10px; padding: 0; background-color: #ffffff;
+}
+.rte__color-input::-webkit-color-swatch-wrapper { padding: 0; }
+.rte__color-input::-webkit-color-swatch { border: none; border-radius: 8px; }
+.rte__chip-button {
+  border: 1px solid #d0d5dd; border-radius: 999px; padding: 6px 14px; font-size: 12px; font-weight: 600;
+  background-color: #ffffff; color: #475467; cursor: pointer;
 }
 
-.rte__content .ProseMirror p {
-  margin: 0 0 12px;
-}
-
-.rte__content .ProseMirror ul,
-.rte__content .ProseMirror ol {
-  padding-left: 24px;
-}
-
-.rte__content .ProseMirror table {
-  width: auto;
-  max-width: 100%;
-  border-collapse: collapse;
-  margin: 16px 0;
-  table-layout: auto;
-}
-
-.rte__content .ProseMirror th,
-.rte__content .ProseMirror td {
-  border: 1px solid #c5ccd6;
-  padding: 8px 12px;
-  position: relative;
-}
-
-.rte__content .ProseMirror h1 {
-  font-size: 32px;
-  margin: 24px 0 16px;
-}
-
-.rte__content .ProseMirror h2 {
-  font-size: 28px;
-  margin: 22px 0 14px;
-}
-
-.rte__content .ProseMirror h3 {
-  font-size: 22px;
-  margin: 20px 0 12px;
-}
-
-.rte__content .ProseMirror h4 {
-  font-size: 18px;
-  margin: 18px 0 10px;
-}
-
-.rte__content .ProseMirror-selectednode {
-  outline: 2px solid #0d6efd;
-}
-
-.rte__content .ProseMirror .column-resize-handle {
-  position: absolute;
-  right: -2px;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background-color: rgba(13, 110, 253, 0.4);
-  cursor: col-resize;
-}
-
+/* 테이블 픽커 */
+.rte__table-picker { position: relative; display: inline-flex; align-items: center; }
 .rte__table-picker-popover {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 16px;
-  background-color: #ffffff;
-  border: 1px solid #dde3f0;
-  border-radius: 12px;
-  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.2);
-  z-index: 20;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  position: absolute; top: calc(100% + 12px); left: 50%; transform: translateX(-50%);
+  padding: 16px; background: #fff; border: 1px solid #dde3f0; border-radius: 12px;
+  box-shadow: 0 18px 38px rgba(15, 23, 42, 0.2); z-index: 20; display: flex; flex-direction: column; gap: 10px; 
 }
-
-.rte__table-picker-preview {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1f2937;
-  text-align: center;
-}
-
+.rte__table-picker-preview { font-size: 13px; font-weight: 600; color: #1f2937; text-align: center; }
 .rte__table-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(8, 20px);
-  grid-auto-rows: 20px;
-  gap: 6px;
+  display: grid; grid-template-columns: repeat(8, 20px); grid-auto-rows: 20px; gap: 6px;
 }
-
-.rte__table-picker-row {
-  display: contents;
-}
-
+.rte__table-picker-row { display: contents; }
 .rte__table-picker-cell {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  border: 1px solid #dde3f0;
-  background-color: #f8fafc;
-  cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
-  padding: 0;
+  width: 20px; height: 20px; border-radius: 6px; border: 1px solid #dde3f0; background-color: #f8fafc; cursor: pointer;
 }
+.rte__table-picker-cell.selected { background: linear-gradient(135deg, rgba(254, 240, 138, 0.92), rgba(253, 224, 71, 0.92)); border-color: #facc15; }
 
-.rte__table-picker-cell:hover,
-.rte__table-picker-cell:focus {
-  outline: none;
-  border-color: #93c5fd;
-  background-color: #e0f2fe;
+/* 기본 테이블 */
+.gdoc__content .ProseMirror table {
+  border-collapse: collapse; width: auto; max-width: 100%; table-layout: auto; margin: 16px 0; border: 1px solid #d1d5db;
 }
-
-.rte__table-picker-cell.selected {
-  background: linear-gradient(135deg, rgba(254, 240, 138, 0.92), rgba(253, 224, 71, 0.92));
-  border-color: #facc15;
+.gdoc__content .ProseMirror th, .gdoc__content .ProseMirror td {
+  border: 1px solid #e5e7eb; padding: 8px 12px;
 }
-
+.gdoc__content .ProseMirror th { background: #f8fafc; font-weight: 700; }
