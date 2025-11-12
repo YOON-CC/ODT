@@ -51,6 +51,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
   const [tablePickerSelection, setTablePickerSelection] = useState<TableSize | null>(null)
   const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
   const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
+  const [tablePickerLocked, setTablePickerLocked] = useState<boolean>(false)
 
   useEffect(() => {
     if (!editor) {
@@ -106,6 +107,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
       setIsTablePickerOpen(false)
       setTablePickerSelection(null)
       setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
+      setTablePickerLocked(false)
     }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -194,7 +196,11 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
     setIsTablePickerOpen(false)
     setTablePickerSelection(null)
     setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
+    setTablePickerLocked(false)
   }
+
+  const displayTableSize =
+    tablePickerSelection ?? tablePickerHover ?? TABLE_PICKER_DEFAULT_SIZE
 
   return (
     <div className="gdoc__toolbar global-toolbar">
@@ -336,11 +342,13 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
               if (previous) {
                 setTablePickerSelection(null)
                 setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
+                setTablePickerLocked(false)
                 return false
               }
               const initial = tablePickerSelection ?? TABLE_PICKER_DEFAULT_SIZE
               setTablePickerHover(initial)
               setTablePickerSelection(initial)
+              setTablePickerLocked(false)
               editor.chain().focus().run()
               return true
             })
@@ -353,8 +361,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
           <div className="rte__table-picker-popover" ref={tablePickerPopoverRef}>
             <div className="rte__table-picker-header">
               <span>
-                {Math.max((tablePickerHover ?? tablePickerSelection ?? TABLE_PICKER_DEFAULT_SIZE).rows, 1)} ×{' '}
-                {Math.max((tablePickerHover ?? tablePickerSelection ?? TABLE_PICKER_DEFAULT_SIZE).cols, 1)} 표
+                {Math.max(displayTableSize.rows, 1)} × {Math.max(displayTableSize.cols, 1)} 표
               </span>
               <button
                 type="button"
@@ -367,7 +374,14 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
                 적용
               </button>
             </div>
-            <div className="rte__table-picker-grid">
+            <div
+              className="rte__table-picker-grid"
+              onMouseLeave={() => {
+                if (tablePickerLocked) {
+                  setTablePickerHover(tablePickerSelection ?? TABLE_PICKER_DEFAULT_SIZE)
+                }
+              }}
+            >
   {Array.from({ length: TABLE_PICKER_MAX_ROWS }).map((_, rowIndex) =>
     Array.from({ length: TABLE_PICKER_MAX_COLS }).map((__, colIndex) => {
       const rows = rowIndex + 1
@@ -385,12 +399,19 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
           key={`cell-${rowIndex}-${colIndex}`}
           type="button"
           className={`rte__table-picker-cell${isHighlighted ? ' selected' : ''}`}
-          onMouseEnter={() => setTablePickerHover({ rows, cols })}
-          onFocus={() => setTablePickerHover({ rows, cols })}
+          onMouseEnter={() => {
+            if (tablePickerLocked) return
+            setTablePickerHover({ rows, cols })
+          }}
+          onFocus={() => {
+            if (tablePickerLocked) return
+            setTablePickerHover({ rows, cols })
+          }}
           onMouseDown={event => event.preventDefault()}
           onClick={() => {
             setTablePickerSelection({ rows, cols })
             setTablePickerHover({ rows, cols })
+            setTablePickerLocked(true)
           }}
         />
       )
