@@ -405,8 +405,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
           title=".odt 다운로드"
           disabled={!editor}
         >
-          <MdDownload size={18} />
-          <span>.odt 다운로드</span>
+          <span>다운로드</span>
         </button>
       </div>
 
