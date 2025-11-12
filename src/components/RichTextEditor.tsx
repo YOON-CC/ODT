@@ -28,6 +28,10 @@ type Props = {
   value: string
   onChange: (html: string) => void
   onDownload?: () => void
+  showToolbar?: boolean
+  maxHeightWarning?: number
+  onOverflow?: (editor: Editor) => void
+  onEditorReady?: (editor: Editor) => void
 }
 
 /** ===== 기존 폰트 선택용 옵션 (그대로 유지) ===== */
@@ -146,7 +150,15 @@ declare module '@tiptap/core' {
   }
 }
 
-export default function RichTextEditor({ value, onChange, onDownload }: Props) {
+export default function RichTextEditor({
+  value,
+  onChange,
+  onDownload,
+  showToolbar = true,
+  maxHeightWarning,
+  onOverflow,
+  onEditorReady
+}: Props) {
   // ===== 기존 UI 상태들 유지 =====
   const [fontKey, setFontKey] = useState<FontKey>('system')
   const [fontColor, setFontColor] = useState<string>(DEFAULT_COLOR)
@@ -157,6 +169,8 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
   const [tablePickerHover, setTablePickerHover] = useState<{ rows: number; cols: number }>(TABLE_PICKER_DEFAULT_SIZE)
   const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
   const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const overflowTriggeredRef = useRef(false)
 
   const editor = useEditor({
     extensions: [
@@ -199,6 +213,43 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
       }
     }
   })
+
+  useEffect(() => {
+    if (!editor) return
+    onEditorReady?.(editor)
+  }, [editor, onEditorReady])
+
+  useEffect(() => {
+    console.log("감지되고 있음")
+    if (!maxHeightWarning || !onOverflow) return
+    if (!editor) return
+    const editorInstance = editor
+    const element = contentRef.current
+    if (!element) return
+
+    const checkHeight = () => {
+      const height = element.clientHeight
+      if (!editorInstance.isFocused) return
+      console.log("height", height, maxHeightWarning)
+      if (height > maxHeightWarning) {
+        if (!overflowTriggeredRef.current) {
+          overflowTriggeredRef.current = true
+          onOverflow(editorInstance)
+        }
+      } else if (overflowTriggeredRef.current && height <= maxHeightWarning * 0.9) {
+        overflowTriggeredRef.current = false
+      }
+    }
+
+    checkHeight()
+
+    const resizeObserver = new ResizeObserver(checkHeight)
+    resizeObserver.observe(element)
+
+    return () => {
+      resizeObserver.disconnect()
+    }
+  }, [editor, maxHeightWarning, onOverflow])
 
   // 외부 value ↔ editor 동기화
   useEffect(() => {
@@ -287,8 +338,8 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
 
   return (
     <div className="gdoc">
-      {/* ===== 왼쪽: 구글 Docs 스타일 새 툴바 ===== */}
-      <div className="gdoc__toolbar">
+      {showToolbar ? (
+        <div className="gdoc__toolbar">
         {/* 텍스트 스타일 */}
         <div className="gdoc__group">
           <select className="gdoc__select" value={currentHeadingLevel} onChange={onHeadingChange} title="텍스트 스타일">
@@ -403,11 +454,12 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addRowAfter().run())}>행 + 하</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteColumn().run())}>열 삭제</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteRow().run())}>행 삭제</button> */}
-        </div> 
-      </div>
+        </div>
+        </div>
+      ) : null}
 
       {/* 본문 */}
-      <EditorContent editor={editor} className="gdoc__content" />
+      <EditorContent editor={editor} className="gdoc__content" ref={contentRef} />
     </div>
   )
 }
