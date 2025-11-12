@@ -368,34 +368,36 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
               </button>
             </div>
             <div className="rte__table-picker-grid">
-              {Array.from({ length: TABLE_PICKER_MAX_ROWS }).map((_, rowIndex) => (
-                <div key={`row-${rowIndex}`} className="rte__table-picker-row">
-                  {Array.from({ length: TABLE_PICKER_MAX_COLS }).map((__, colIndex) => {
-                    const rows = rowIndex + 1
-                    const cols = colIndex + 1
-                    const highlightRows =
-                      tablePickerHover?.rows ?? tablePickerSelection?.rows ?? TABLE_PICKER_DEFAULT_SIZE.rows
-                    const highlightCols =
-                      tablePickerHover?.cols ?? tablePickerSelection?.cols ?? TABLE_PICKER_DEFAULT_SIZE.cols
-                    const isHighlighted = rows <= highlightRows && cols <= highlightCols
-                    return (
-                      <button
-                        key={`cell-${rowIndex}-${colIndex}`}
-                        type="button"
-                        className={`rte__table-picker-cell${isHighlighted ? ' selected' : ''}`}
-                        onMouseEnter={() => setTablePickerHover({ rows, cols })}
-                        onFocus={() => setTablePickerHover({ rows, cols })}
-                        onMouseDown={event => event.preventDefault()}
-                        onClick={() => {
-                          setTablePickerSelection({ rows, cols })
-                          setTablePickerHover({ rows, cols })
-                        }}
-                      />
-                    )
-                  })}
-                </div>
-              ))}
-            </div>
+  {Array.from({ length: TABLE_PICKER_MAX_ROWS }).map((_, rowIndex) =>
+    Array.from({ length: TABLE_PICKER_MAX_COLS }).map((__, colIndex) => {
+      const rows = rowIndex + 1
+      const cols = colIndex + 1
+
+      const highlightRows =
+        tablePickerHover?.rows ?? tablePickerSelection?.rows ?? TABLE_PICKER_DEFAULT_SIZE.rows
+      const highlightCols =
+        tablePickerHover?.cols ?? tablePickerSelection?.cols ?? TABLE_PICKER_DEFAULT_SIZE.cols
+
+      const isHighlighted = rows <= highlightRows && cols <= highlightCols
+
+      return (
+        <button
+          key={`cell-${rowIndex}-${colIndex}`}
+          type="button"
+          className={`rte__table-picker-cell${isHighlighted ? ' selected' : ''}`}
+          onMouseEnter={() => setTablePickerHover({ rows, cols })}
+          onFocus={() => setTablePickerHover({ rows, cols })}
+          onMouseDown={event => event.preventDefault()}
+          onClick={() => {
+            setTablePickerSelection({ rows, cols })
+            setTablePickerHover({ rows, cols })
+          }}
+        />
+      )
+    })
+  )}
+</div>
+
           </div>
         )}
         <button

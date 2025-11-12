@@ -26,8 +26,8 @@ export const DEFAULT_CELL_BACKGROUND = '#ffffff' as const
 export const FONT_SIZE_DEFAULT = 'default' as const
 export const DEFAULT_FONT_SIZE_LABEL = '기본 (14px)' as const
 
-export const TABLE_PICKER_MAX_ROWS = 8
-export const TABLE_PICKER_MAX_COLS = 8
+export const TABLE_PICKER_MAX_ROWS = 10
+export const TABLE_PICKER_MAX_COLS = 10
 export const TABLE_PICKER_DEFAULT_SIZE = { rows: 2, cols: 2 } as const
 
 export const FONT_SIZE_OPTIONS = [
