@@ -220,7 +220,6 @@ export default function RichTextEditor({
   }, [editor, onEditorReady])
 
   useEffect(() => {
-    console.log("감지되고 있음")
     if (!maxHeightWarning || !onOverflow) return
     if (!editor) return
     const editorInstance = editor
@@ -230,7 +229,6 @@ export default function RichTextEditor({
     const checkHeight = () => {
       const height = element.clientHeight
       if (!editorInstance.isFocused) return
-      console.log("height", height, maxHeightWarning)
       if (height > maxHeightWarning) {
         if (!overflowTriggeredRef.current) {
           overflowTriggeredRef.current = true

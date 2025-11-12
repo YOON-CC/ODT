@@ -39,9 +39,10 @@ export type Table = {
   columnWidths?: Array<string | undefined>
 }
 
-export type OdtBlock = 
+export type OdtBlock =
   | { type: 'paragraph'; value: Paragraph }
   | { type: 'table'; value: Table }
+  | { type: 'pageBreak' }
 
 export type OdtDoc = {
   meta: { title?: string; creator?: string }

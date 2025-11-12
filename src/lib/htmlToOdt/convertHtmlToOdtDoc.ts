@@ -6,6 +6,7 @@ import type {
   TextSpan
 } from '../odt/types'
 import { STYLE_MAP } from '../styleMap'
+import { PAGE_BREAK_SELECTOR } from '../pageBreak'
 
 type SpanStyle = Partial<Omit<TextSpan, 'text'>>
 type ParagraphAlign = Paragraph['align']
@@ -139,6 +140,11 @@ function collectBlocks(root: HTMLElement, context: ConversionContext): OdtBlock[
   Array.from(root.children).forEach(el => {
     if (!(el instanceof HTMLElement)) return
     const tag = el.tagName
+
+    if (el.matches(PAGE_BREAK_SELECTOR)) {
+      blocks.push({ type: 'pageBreak' })
+      return
+    }
 
     if (tag === 'TABLE') {
       blocks.push({ type: 'table', value: tableElementToTable(el as HTMLTableElement, context) })

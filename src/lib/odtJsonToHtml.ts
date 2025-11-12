@@ -1,6 +1,8 @@
 //----------------------------------------------------
 // odtJsonToHtml.ts (FULL VERSION)
 //----------------------------------------------------
+import { PAGE_BREAK_HTML } from './pageBreak'
+
 type StyleMap = Record<string, string>
 
 export interface OdtJsonDocument {
@@ -79,6 +81,8 @@ function nodeToHtml(node: OdtNode): string {
   }
 
   switch (node.name) {
+    case 'text:soft-page-break':
+      return PAGE_BREAK_HTML
     case 'text:p':
       return convertParagraph(node)
     case 'text:span':
@@ -104,9 +108,29 @@ function convertParagraph(node: OdtNode): string {
   )
 
   const styleAttr = styleMapToAttr(style)
-  const inner = nodesToHtml(node.children)
+  const children = node.children ?? []
+  const softBreakCount = children.filter(child => child?.name === 'text:soft-page-break').length
+  const otherChildren = children.filter(child => child?.name !== 'text:soft-page-break')
+  const inner = nodesToHtml(otherChildren)
 
-  return `<p${styleAttr}>${inner || '<br />'}</p>`
+  const parts: string[] = []
+  const hasContent =
+    otherChildren.length > 0 ||
+    (inner && inner.replace(/<br\s*\/?>/gi, '').trim().length > 0)
+
+  if (hasContent) {
+    parts.push(`<p${styleAttr}>${inner || '<br />'}</p>`)
+  } else if (softBreakCount === 0) {
+    parts.push(`<p${styleAttr}>${inner || '<br />'}</p>`)
+  }
+
+  if (softBreakCount > 0) {
+    for (let i = 0; i < softBreakCount; i += 1) {
+      parts.push(PAGE_BREAK_HTML)
+    }
+  }
+
+  return parts.join('')
 }
 
 /* -------------------------------------------------------

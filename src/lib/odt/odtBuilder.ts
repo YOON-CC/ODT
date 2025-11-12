@@ -21,6 +21,7 @@ export function buildContentXml(doc: OdtDoc): string {
 function renderBlock(b: OdtBlock, styles: StyleRegistry): string {
   if (b.type === 'paragraph') return renderParagraph(b.value, styles)
   if (b.type === 'table') return renderTable(b.value, styles)
+  if (b.type === 'pageBreak') return '<text:p><text:soft-page-break/></text:p>'
   return ''
 }
 

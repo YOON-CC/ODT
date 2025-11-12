@@ -8,11 +8,19 @@ import {
   convertHtmlToOdtDoc,
   DEFAULT_CONTENT_WIDTH_PX
 } from '../lib/htmlToOdt/convertHtmlToOdtDoc'
+import { PAGE_BREAK_HTML } from '../lib/pageBreak'
+
+function splitHtmlIntoPages(html: string): string[] {
+  if (!html) return ['']
+  const parts = html.split(PAGE_BREAK_HTML)
+  if (!parts.length) return ['']
+  return parts.map(part => part)
+}
 
 const SAMPLE_RESPONSE = sampleResponse as any
 
 export default function EditorPage() {
-  const [pages, setPages] = useState<string[]>(['', ''])
+  const [pages, setPages] = useState<string[]>([''])
   const [visiblePageCount, setVisiblePageCount] = useState<number>(1)
   const sampleHtmlRef = useRef<string>('')
   const editorRefs = useRef<Array<Editor | null>>([])
@@ -22,12 +30,19 @@ export default function EditorPage() {
     console.log('converted', converted)
 
     sampleHtmlRef.current = converted
-    setPages([converted, ''])
-    setVisiblePageCount(1)
+    const initialPages = splitHtmlIntoPages(converted)
+    setPages(initialPages)
+    setVisiblePageCount(initialPages.length || 1)
   }, [])
 
   useEffect(() => {
-    editorRefs.current.length = pages.length
+    editorRefs.current = Array.from({ length: pages.length }, (_, idx) => editorRefs.current[idx] ?? null)
+    setVisiblePageCount(prev => {
+      const max = pages.length || 1
+      if (prev > max) return max
+      if (prev < 1) return 1
+      return prev
+    })
   }, [pages.length])
 
   const handleDownload = useCallback(async () => {
@@ -44,7 +59,7 @@ export default function EditorPage() {
       }
     }
 
-    const combinedHtml = pages.join('<div data-page-break="true"></div>')
+    const combinedHtml = pages.join(PAGE_BREAK_HTML)
     const json = convertHtmlToOdtDoc(combinedHtml, { editorRoot, contentWidthPx })
     await makeAndDownloadOdt(json, '알림장.odt')
   }, [pages])
