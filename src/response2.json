@@ -1,74 +1,708 @@
 {
-  "type": "doc",
-  "body": [
-    {
-      "type": "paragraph",
-      "value": {
-        "align": "center",
-        "spans": [
-          { "text": "📢 2025학년도 가정통신문", "bold": true, "fontSize": "16pt" }
-        ]
-      }
+  "content": {
+    "nodeType": "ELEMENT",
+    "name": "office:document-content",
+    "attributes": {
+      "xmlns:office": "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
+      "xmlns:text": "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
+      "xmlns:table": "urn:oasis:names:tc:opendocument:xmlns:table:1.0",
+      "xmlns:style": "urn:oasis:names:tc:opendocument:xmlns:style:1.0",
+      "xmlns:fo": "urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0",
+      "office:version": "1.3"
     },
-    {
-      "type": "paragraph",
-      "value": {
-        "align": "center",
-        "spans": [
-          { "text": "화상 영어 수업 신청 안내", "bold": true, "fontSize": "14pt" }
-        ]
-      }
-    },
-    {
-      "type": "paragraph",
-      "value": {
-        "spans": [
-          { "text": "안녕하십니까 학부모님.\n본교에서는 학생들의 영어 의사소통 능력 향상을 위해 ", "fontSize": "12pt" },
-          { "text": "2025학년도 화상 영어 수업", "bold": true, "color": "#0070ff" },
-          { "text": "을 운영하고자 합니다." }
-        ]
-      }
-    },
-    {
-      "type": "table",
-      "value": {
-        "widthPct": 100,
-        "columnWidths": ["4cm", "12cm"],
-        "rows": [
+    "children": [
+      {
+        "nodeType": "ELEMENT",
+        "name": "office:body",
+        "children": [
           {
-            "cells": [
+            "nodeType": "ELEMENT",
+            "name": "office:text",
+            "children": [
+
               {
-                "paragraphs": [{ "align": "center", "spans": [{ "text": "구분", "bold": true }] }],
-                "backgroundColor": "#eef2f7"
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold",
+                      "fo:font-size": "16pt"
+                    },
+                    "children": [
+                      {
+                        "nodeType": "TEXT",
+                        "textContent": "[가정통신문] 2학기 방과후 영어회화반 신청 안내"
+                      }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold"
+                    },
+                    "children": [
+                      { "nodeType": "TEXT", "textContent": "학교/학급: " }
+                    ]
+                  },
+                  { "nodeType": "TEXT", "textContent": "OO초등학교 3학년 2반" }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold"
+                    },
+                    "children": [
+                      { "nodeType": "TEXT", "textContent": "배포일: " }
+                    ]
+                  },
+                  { "nodeType": "TEXT", "textContent": "2025-11-11   담당: 담임 김가람 (☎ 02-000-0000)" }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  { "nodeType": "TEXT", "textContent": "안녕하세요, 학부모님. 아래와 같이 방과후 영어회화반 운영을 안내드립니다." }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold",
+                      "fo:font-size": "13pt"
+                    },
+                    "children": [
+                      { "nodeType": "TEXT", "textContent": "1. 운영 개요" }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "table:table",
+                "attributes": { "table:name": "운영개요" },
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-column",
+                    "attributes": { "table:number-columns-repeated": "2" }
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "기간" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "11/18(월) ~ 12/20(토), 총 5주" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "요일/시간" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "매주 화·목 15:10~16:00" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "대상/정원" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "3~4학년 선착순 15명" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "장소" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "본관 2층 영어전용교실" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold",
+                      "fo:font-size": "13pt"
+                    },
+                    "children": [
+                      { "nodeType": "TEXT", "textContent": "2. 수강료 및 준비물" }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "table:table",
+                "attributes": { "table:name": "수강료준비물" },
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-column",
+                    "attributes": { "table:number-columns-repeated": "2" }
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "수강료" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "월 40,000원 (11/20 자동이체)" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "준비물" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "연필/지우개, 개인 물병" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold",
+                      "fo:font-size": "13pt"
+                    },
+                    "children": [
+                      { "nodeType": "TEXT", "textContent": "3. 신청 안내" }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  { "nodeType": "TEXT", "textContent": "신청기한: 11/15(금) 16:00까지 / 방법: 동의서 제출 또는 온라인 폼 제출" }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  { "nodeType": "TEXT", "textContent": "유의사항: 결석 시 보강 불가, 운동화 착용 권장" }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "TEXT",
+                    "textContent": "----------------------------------------"
+                  }
+                ]
               },
               {
-                "paragraphs": [{ "align": "center", "spans": [{ "text": "내용", "bold": true }] }],
-                "backgroundColor": "#eef2f7"
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:soft-page-break"
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:span",
+                    "attributes": {
+                      "fo:font-weight": "bold",
+                      "fo:font-size": "14pt"
+                    },
+                    "children": [
+                      { "nodeType": "TEXT", "textContent": "[참가 동의서] 방과후 영어회화반" }
+                    ]
+                  }
+                ]
+              },
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:soft-page-break"
+                  }
+                ]
+              },
+              {
+                "nodeType": "ELEMENT",
+                "name": "table:table",
+                "attributes": { "table:name": "동의서" },
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-column",
+                    "attributes": { "table:number-columns-repeated": "2" }
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "학생명" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "__________ (학반: ____ )" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "보호자명/연락처" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "__________ / __________" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "참가 동의" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "TEXT",
+                                "textContent": "□ 동의함     □ 동의하지 않음"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  },
+
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "table:table-row",
+                    "children": [
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              {
+                                "nodeType": "ELEMENT",
+                                "name": "text:span",
+                                "attributes": {
+                                  "fo:font-weight": "bold",
+                                  "fo:background-color": "#f2f2f2"
+                                },
+                                "children": [
+                                  { "nodeType": "TEXT", "textContent": "개인정보 수집·이용 동의" }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      },
+
+                      {
+                        "nodeType": "ELEMENT",
+                        "name": "table:table-cell",
+                        "children": [
+                          {
+                            "nodeType": "ELEMENT",
+                            "name": "text:p",
+                            "children": [
+                              { "nodeType": "TEXT", "textContent": "운영 관리 및 연락 목적" }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  { "nodeType": "TEXT", "textContent": "보호자 서명: ____________   날짜: ______/______/______" }
+                ]
               }
-            ]
-          },
-          {
-            "cells": [
-              { "paragraphs": [{ "spans": [{ "text": "운영 기간" }] }] },
-              { "paragraphs": [{ "spans": [{ "text": "2025년 3월 ~ 2025년 11월 (총 8개월)" }] }] }
-            ]
-          },
-          {
-            "cells": [
-              { "paragraphs": [{ "spans": [{ "text": "신청 기간" }] }] },
-              { "paragraphs": [{ "spans": [{ "text": "2025년 3월 7일(금)까지" }] }] }
             ]
           }
         ]
       }
-    },
-    {
-      "type": "paragraph",
-      "value": {
-        "spans": [
-          { "text": "* 문의: 교무실 (02-123-4567)", "italic": true, "color": "#555" }
-        ]
-      }
-    }
-  ]
+    ]
+  }
 }

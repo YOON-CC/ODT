@@ -39,8 +39,10 @@ export default function EditorPage() {
     editorRefs.current = Array.from({ length: pages.length }, (_, idx) => editorRefs.current[idx] ?? null)
     setVisiblePageCount(prev => {
       const max = pages.length || 1
-      if (prev > max) return max
+      if (prev >= max && prev <= max) return prev === 0 ? 1 : prev
       if (prev < 1) return 1
+      if (prev < max) return max
+      if (prev > max) return max
       return prev
     })
   }, [pages.length])
@@ -68,34 +70,10 @@ export default function EditorPage() {
     setPages(prev => prev.map((value, idx) => (idx === index ? next : value)))
   }, [])
 
-  const handleOverflow = useCallback(
-    (index: number) => {
-      const nextIndex = index + 1
-
-      const ensureNextPage = () => {
-        setPages(prevPages => {
-          if (nextIndex < prevPages.length) {
-            return prevPages
-          }
-          return [...prevPages, '']
-        })
-      }
-
-      ensureNextPage()
-
-      setVisiblePageCount(prev => Math.max(prev, nextIndex + 1))
-      alert(`페이지 ${index + 1}의 높이가 제한을 초과했습니다. 다음 페이지로 이동합니다.`)
-
-      setTimeout(() => {
-        if (nextIndex >= editorRefs.current.length) return
-        const nextEditor = editorRefs.current[nextIndex]
-        if (nextEditor) {
-          nextEditor.chain().focus().run()
-        }
-      }, 0)
-    },
-    []
-  )
+  const handleOverflow = useCallback((index: number) => {
+    alert(`페이지 ${index + 1}의 높이가 제한을 초과했습니다. 페이지 나눔을 추가해 주세요.`)
+    setVisiblePageCount(prev => Math.max(prev, index + 1))
+  }, [])
 
   return (
     <div className="app">
