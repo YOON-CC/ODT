@@ -376,7 +376,7 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
         </div>
 
         {/* ===== 오른쪽 끝: 기존 기능들 Raw Append (UI 깨져도 OK) ===== */}
-        {/* <div className="legacy-inline">
+        <div className="legacy-inline">
           <label className="rte__group-label">텍스트 스타일</label>
           <select className="rte__select rte__select--wide" value={fontKey} onChange={handleFontChange}>
             {FONT_OPTIONS.map(o => <option key={o.key} value={o.key}>{o.label}</option>)}
@@ -396,30 +396,14 @@ export default function RichTextEditor({ value, onChange, onDownload }: Props) {
           <input type="color" className="rte__color-input" value={cellBackground || DEFAULT_CELL_BACKGROUND}
                  onChange={handleCellBackgroundChange} disabled={!isTableSelection} title="표 셀 배경색 선택"/>
           <button type="button" className="rte__chip-button" disabled={!isTableSelection} onClick={handleCellBackgroundReset}>없음</button>
-
-          <div className="rte__table-picker" ref={tablePickerAnchorRef}>
-            <button type="button" className="rte__chip-button"
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => setIsTablePickerOpen(p => {
-                const next = !p
-                if (!p) setTablePickerHover(TABLE_PICKER_DEFAULT_SIZE)
-                if (!p) editor?.chain().focus().run()
-                return next
-              })}
-            >
-              표 추가(픽커)
-            </button>
-
-          </div>
-
-          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteTable().run())}>표 삭제</button>
+          {/* <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteTable().run())}>표 삭제</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addColumnBefore().run())}>열 + 좌</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addColumnAfter().run())}>열 + 우</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addRowBefore().run())}>행 + 상</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().addRowAfter().run())}>행 + 하</button>
           <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteColumn().run())}>열 삭제</button>
-          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteRow().run())}>행 삭제</button>
-        </div> */}
+          <button type="button" className="rte__chip-button" disabled={!isActive('table')} onClick={exec(i => i.chain().focus().deleteRow().run())}>행 삭제</button> */}
+        </div> 
       </div>
 
       {/* 본문 */}
