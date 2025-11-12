@@ -40,6 +40,35 @@ type Props = {
 
 type TableSize = { rows: number; cols: number }
 
+type SelectionState = {
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  strike: boolean
+  bullet: boolean
+  ordered: boolean
+  blockquote: boolean
+}
+
+const DEFAULT_SELECTION_STATE: SelectionState = {
+  bold: false,
+  italic: false,
+  underline: false,
+  strike: false,
+  bullet: false,
+  ordered: false,
+  blockquote: false
+}
+
+const isSameSelectionState = (a: SelectionState, b: SelectionState) =>
+  a.bold === b.bold &&
+  a.italic === b.italic &&
+  a.underline === b.underline &&
+  a.strike === b.strike &&
+  a.bullet === b.bullet &&
+  a.ordered === b.ordered &&
+  a.blockquote === b.blockquote
+
 export default function GlobalToolbar({ editor, onDownload }: Props) {
   const [fontKey, setFontKey] = useState<FontKey>('system')
   const [fontColor, setFontColor] = useState<string>(DEFAULT_COLOR)
@@ -52,6 +81,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
   const tablePickerAnchorRef = useRef<HTMLDivElement | null>(null)
   const tablePickerPopoverRef = useRef<HTMLDivElement | null>(null)
   const [tablePickerLocked, setTablePickerLocked] = useState<boolean>(false)
+  const [selectionState, setSelectionState] = useState<SelectionState>(() => ({ ...DEFAULT_SELECTION_STATE }))
 
   useEffect(() => {
     if (!editor) {
@@ -61,6 +91,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
       setCellBackground('')
       setIsTableSelection(false)
       setIsTablePickerOpen(false)
+      setSelectionState({ ...DEFAULT_SELECTION_STATE })
       return
     }
 
@@ -86,6 +117,20 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
       } else {
         setCellBackground('')
       }
+
+      const nextSelectionState: SelectionState = {
+        bold: instance.isActive('bold'),
+        italic: instance.isActive('italic'),
+        underline: instance.isActive('underline'),
+        strike: instance.isActive('strike'),
+        bullet: instance.isActive('bulletList'),
+        ordered: instance.isActive('orderedList'),
+        blockquote: instance.isActive('blockquote')
+      }
+
+      setSelectionState(prev =>
+        isSameSelectionState(prev, nextSelectionState) ? prev : nextSelectionState
+      )
     }
 
     editor.on('selectionUpdate', updateState)
@@ -129,7 +174,6 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
     command(editor)
   }
 
-  const isActive = (name: string, attrs?: Record<string, unknown>) => editor?.isActive(name, attrs) ?? false
   const btn = (active: boolean) => (active ? 'gdoc__btn is-active' : 'gdoc__btn')
 
   const currentHeadingLevel =
@@ -225,7 +269,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
         {/* Bold */}
         <button
           type="button"
-          className={btn(isActive('bold'))}
+          className={btn(selectionState.bold)}
           onClick={exec(instance => instance.chain().focus().toggleBold().run())}
           title="굵게"
           disabled={!editor}
@@ -237,7 +281,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
         {/* Italic */}
         <button
           type="button"
-          className={btn(isActive('italic'))}
+          className={btn(selectionState.italic)}
           onClick={exec(instance => instance.chain().focus().toggleItalic().run())}
           title="기울임"
           disabled={!editor}
@@ -249,7 +293,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
         {/* Underline */}
         <button
           type="button"
-          className={btn(isActive('underline'))}
+          className={btn(selectionState.underline)}
           onClick={exec(instance => instance.chain().focus().toggleUnderline().run())}
           title="밑줄"
           disabled={!editor}
@@ -261,7 +305,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
         {/* Strike */}
         <button
           type="button"
-          className={btn(isActive('strike'))}
+          className={btn(selectionState.strike)}
           onClick={exec(instance => instance.chain().focus().toggleStrike().run())}
           title="취소선"
           disabled={!editor}
@@ -277,7 +321,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
       <div className="gdoc__group">
         <button
           type="button"
-          className={btn(isActive('bulletList'))}
+          className={btn(selectionState.bullet)}
           onClick={exec(instance => instance.chain().focus().toggleBulletList().run())}
           title="글머리 기호"
           disabled={!editor}
@@ -286,7 +330,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
         </button>
         <button
           type="button"
-          className={btn(isActive('orderedList'))}
+          className={btn(selectionState.ordered)}
           onClick={exec(instance => instance.chain().focus().toggleOrderedList().run())}
           title="번호 매기기"
           disabled={!editor}
@@ -299,7 +343,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
       <div className="gdoc__group">
         <button
           type="button"
-          className={btn(isActive('blockquote'))}
+          className={btn(selectionState.blockquote)}
           onClick={exec(instance => instance.chain().focus().toggleBlockquote().run())}
           title="인용구"
           disabled={!editor}

@@ -237,6 +237,11 @@
 .gdoc__content .ProseMirror h1 { font-size: 32px; margin: 24px 0 16px; }
 .gdoc__content .ProseMirror h2 { font-size: 28px; margin: 22px 0 14px; }
 .gdoc__content .ProseMirror h3 { font-size: 22px; margin: 20px 0 12px; }
+.gdoc__content .ProseMirror::selection,
+.gdoc__content .ProseMirror *::selection {
+  background: #CBEB58;
+  color: #0f172a;
+}
 .gdoc__content .ProseMirror blockquote {
   margin: 18px 0;
   padding: 18px 24px;
