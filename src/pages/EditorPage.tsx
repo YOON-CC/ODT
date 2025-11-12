@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { Editor } from '@tiptap/core'
 import RichTextEditor from '../components/RichTextEditor'
+import GlobalToolbar from '../components/GlobalToolbar'
 import sampleResponse from '../response.json'
 import { odtJsonToHtml } from '../lib/odtJsonToHtml'
 import { makeAndDownloadOdt } from '../lib/odt/zipOdt'
@@ -24,6 +25,7 @@ export default function EditorPage() {
   const [visiblePageCount, setVisiblePageCount] = useState<number>(1)
   const sampleHtmlRef = useRef<string>('')
   const editorRefs = useRef<Array<Editor | null>>([])
+  const [activeEditor, setActiveEditor] = useState<Editor | null>(null)
 
   useEffect(() => {
     const converted = odtJsonToHtml(SAMPLE_RESPONSE)
@@ -48,7 +50,7 @@ export default function EditorPage() {
   }, [pages.length])
 
   const handleDownload = useCallback(async () => {
-    const editorRoot = document.querySelector('.rte__content .ProseMirror') as HTMLElement | null
+    const editorRoot = document.querySelector('.gdoc__content .ProseMirror') as HTMLElement | null
     let contentWidthPx = DEFAULT_CONTENT_WIDTH_PX
 
     if (editorRoot) {
@@ -72,11 +74,12 @@ export default function EditorPage() {
 
   const handleOverflow = useCallback((index: number) => {
     alert(`페이지 ${index + 1}의 높이가 제한을 초과했습니다. 페이지 나눔을 추가해 주세요.`)
-    setVisiblePageCount(prev => Math.max(prev, index + 1))
+    setVisiblePageCount(prev => Math.max(prev, index + 2))
   }, [])
 
   return (
     <div className="app">
+      <GlobalToolbar editor={activeEditor} onDownload={handleDownload} />
       <div className="panel">
         {pages.map((value, index) => (
           <div
@@ -92,12 +95,18 @@ export default function EditorPage() {
             <RichTextEditor
               value={value}
               onChange={next => handlePageChange(index, next)}
-              onDownload={handleDownload}
-              showToolbar
               maxHeightWarning={1096.06}
               onOverflow={() => handleOverflow(index)}
               onEditorReady={editor => {
                 editorRefs.current[index] = editor
+                setActiveEditor(prev => prev ?? editor)
+              }}
+              onHoverChange={editor => {
+                if (editor) {
+                  setActiveEditor(editor)
+                } else {
+                  setActiveEditor(prev => (prev === editorRefs.current[index] ? null : prev))
+                }
               }}
             />
           </div>

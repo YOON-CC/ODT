@@ -458,6 +458,16 @@
                   }
                 ]
               },
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:soft-page-break"
+                  }
+                ]
+              },
 
               {
                 "nodeType": "ELEMENT",
@@ -476,7 +486,16 @@
                   }
                 ]
               },
-
+              {
+                "nodeType": "ELEMENT",
+                "name": "text:p",
+                "children": [
+                  {
+                    "nodeType": "ELEMENT",
+                    "name": "text:soft-page-break"
+                  }
+                ]
+              },
               {
                 "nodeType": "ELEMENT",
                 "name": "table:table",
