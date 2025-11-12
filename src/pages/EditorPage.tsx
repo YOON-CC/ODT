@@ -88,12 +88,13 @@ export default function EditorPage() {
           border: '1px solid #e5e7eb',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'center', // ← 세로 가운데 정렬
+          justifyContent: 'center', 
         }}
       >
         <GlobalToolbar editor={activeEditor} onDownload={handleDownload} />
         <div className="panel"   style={{
             paddingTop: '60px',
+            paddingBottom: '60px',
             flex: 1,    
             overflowY: 'auto',    
             height: '100vh',

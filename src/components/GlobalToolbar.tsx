@@ -207,52 +207,65 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
           title="텍스트 스타일"
           disabled={!editor}
         >
-          <option value="p">본문</option>
+          <option value="p">텍스트 스타일</option>
           <option value="h1">제목 1</option>
           <option value="h2">제목 2</option>
           <option value="h3">제목 3</option>
         </select>
       </div>
-
       {/* 굵게 / 기울기 / 밑줄 / 취소선 */}
       <div className="gdoc__group">
+
+        {/* Bold */}
         <button
           type="button"
           className={btn(isActive('bold'))}
           onClick={exec(instance => instance.chain().focus().toggleBold().run())}
           title="굵게"
           disabled={!editor}
+          style={{ fontWeight: '700' }}
         >
-          <MdFormatBold size={20} />
+          가
         </button>
+
+        {/* Italic */}
         <button
           type="button"
           className={btn(isActive('italic'))}
           onClick={exec(instance => instance.chain().focus().toggleItalic().run())}
           title="기울임"
           disabled={!editor}
+          style={{ fontStyle: 'italic' }}
         >
-          <MdFormatItalic size={20} />
+          가
         </button>
+
+        {/* Underline */}
         <button
           type="button"
           className={btn(isActive('underline'))}
           onClick={exec(instance => instance.chain().focus().toggleUnderline().run())}
           title="밑줄"
           disabled={!editor}
+          style={{ textDecoration: 'underline' }}
         >
-          <MdFormatUnderlined size={20} />
+          가
         </button>
+
+        {/* Strike */}
         <button
           type="button"
           className={btn(isActive('strike'))}
           onClick={exec(instance => instance.chain().focus().toggleStrike().run())}
           title="취소선"
           disabled={!editor}
+          style={{ textDecoration: 'line-through' }}
         >
-          <MdStrikethroughS size={20} />
+          가
         </button>
+
       </div>
+
 
       {/* 리스트 */}
       <div className="gdoc__group">
@@ -385,10 +398,6 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
             </div>
           </div>
         )}
-      </div>
-
-      {/* 다운로드 */}
-      <div className="gdoc__group gdoc__group--right">
         <button
           type="button"
           className="gdoc__download"
@@ -399,6 +408,11 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
           <MdDownload size={18} />
           <span>.odt 다운로드</span>
         </button>
+      </div>
+
+      {/* 다운로드 */}
+      <div className="gdoc__group gdoc__group--right">
+
       </div>
 
       {/* 기존 확장 옵션 */}
