@@ -73,44 +73,61 @@ export default function EditorPage() {
   }, [])
 
   const handleOverflow = useCallback((index: number) => {
-    alert(`페이지 ${index + 1}의 높이가 제한을 초과했습니다. 페이지 나눔을 추가해 주세요.`)
+    // alert(`페이지 ${index + 1}의 높이가 제한을 초과했습니다. 페이지 나눔을 추가해 주세요.`)
     setVisiblePageCount(prev => Math.max(prev, index + 2))
   }, [])
 
   return (
     <div className="app">
-      <GlobalToolbar editor={activeEditor} onDownload={handleDownload} />
-      <div className="panel">
-        {pages.map((value, index) => (
-          <div
-            key={index}
-            style={{
-              height: '100%',
-              flex: 1,
-              marginBottom: index < pages.length - 1 ? '40px' : 0,
-              display: index < visiblePageCount ? 'block' : 'none'
-            }}
-          >
-            <div style={{ marginBottom: '12px', fontWeight: 600 }}>페이지 {index + 1}</div>
-            <RichTextEditor
-              value={value}
-              onChange={next => handlePageChange(index, next)}
-              maxHeightWarning={1096.06}
-              onOverflow={() => handleOverflow(index)}
-              onEditorReady={editor => {
-                editorRefs.current[index] = editor
-                setActiveEditor(prev => prev ?? editor)
+      <div
+        style={{
+          backgroundColor: '#F5F7F9',
+          width: '1090px',
+          height: '100vh',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center', // ← 세로 가운데 정렬
+        }}
+      >
+        <GlobalToolbar editor={activeEditor} onDownload={handleDownload} />
+        <div className="panel"   style={{
+            paddingTop: '60px',
+            flex: 1,    
+            overflowY: 'auto',    
+            height: '100vh',
+          }}>
+          {pages.map((value, index) => (
+            <div
+              key={index}
+              style={{
+                height: '100%',
+                flex: 1,
+                marginBottom: index < pages.length - 1 ? '40px' : 0,
+                display: index < visiblePageCount ? 'block' : 'none'
               }}
-              onHoverChange={editor => {
-                if (editor) {
-                  setActiveEditor(editor)
-                } else {
-                  setActiveEditor(prev => (prev === editorRefs.current[index] ? null : prev))
-                }
-              }}
-            />
-          </div>
-        ))}
+            >
+              <RichTextEditor
+                value={value}
+                onChange={next => handlePageChange(index, next)}
+                maxHeightWarning={1096.06}
+                onOverflow={() => handleOverflow(index)}
+                onEditorReady={editor => {
+                  editorRefs.current[index] = editor
+                  setActiveEditor(prev => prev ?? editor)
+                }}
+                onHoverChange={editor => {
+                  if (editor) {
+                    setActiveEditor(editor)
+                  } else {
+                    setActiveEditor(prev => (prev === editorRefs.current[index] ? null : prev))
+                  }
+                }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

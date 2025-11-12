@@ -402,7 +402,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
       </div>
 
       {/* 기존 확장 옵션 */}
-      <div className="legacy-inline">
+      {/* <div className="legacy-inline">
         <label className="rte__group-label">텍스트 스타일</label>
         <select
           className="rte__select rte__select--wide"
@@ -459,7 +459,7 @@ export default function GlobalToolbar({ editor, onDownload }: Props) {
         >
           없음
         </button>
-      </div>
+      </div> */}
     </div>
   )
 }
